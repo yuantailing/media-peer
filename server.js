@@ -22,8 +22,19 @@ app.use('/peerjs', peerServer);
 
 peerServer.on('connection', function(id) {
         console.log('peerServer.on(\'connection\'): ' + id);
+        sendPeerListToClients();
     });
 
 peerServer.on('disconnect', function(id) {
         console.log('peerServer.on(\'disconnect\'): ' + id);
+        sendPeerListToClients();
     });
+
+function sendPeerListToClients() {
+    var peers = peerServer._clients.peerjs;
+    var str = "PEER_LIST";
+    for (peer in peers)
+        str += " " + peer;
+    for (peer in peers)
+        peers[peer].socket.send(str);
+}

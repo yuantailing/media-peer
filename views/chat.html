@@ -23,8 +23,12 @@ var peer = new Peer({
 
     // Set a logging function:
     logFunction: function() {
-        var copy = Array.prototype.slice.call(arguments).join(' ');
-        $('.log').append(copy + '<br>');
+        if (arguments.length == 2 && arguments[0] == "Invalid server message" && arguments[1].startsWith("PEER_LIST")) {
+            $('.log').append(JSON.stringify(arguments[1].split(' ').slice(1)) + '<br>');
+        } else {
+            var copy = Array.prototype.slice.call(arguments).join(' ');
+            $('.log').append(copy + '<br>');
+        }
     }
 });
 var connectedPeers = {};
