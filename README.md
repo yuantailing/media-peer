@@ -6,17 +6,17 @@
 安装依赖
 
 ```
-npm install
+$ npm install
 ```
 
 开发（代码修改后自动重启）
 
 ```
-npm run dev
+$ npm run dev
 ```
 
 部署
 
 ```
-npm start
+$ npm start
 ```
