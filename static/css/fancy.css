@@ -1,61 +1,89 @@
-
 body,html {
   padding: 0;
   margin: 0;
   font-family: Arial;
-  background-color: #eee;
+  /*background-color: #eee;*/
   color: #444;
   font-size: 15px;
   line-height: 18px;
   text-shadow: 0 1px 0 rgba(255,255,255,0.4);
 }
+
 .connection {
-  float: left;
+  /*float: left;*/
   height: 250px;
-  width: 200px;
-  overflow: scroll;
+  /*width: 200px;*/
+  overflow: auto;
   background-color: #fff;
   padding: 10px;
   margin: 5px;
   border: 1px solid #ccc;
 }
+
 .connection div {
   margin: 5px 0;
 }
+
 .connection.active {
   border-color: #FF7500;
 }
-h1 {
+
+.chatheader {
   font-size: 15px;
   padding: 5px 10px;
   margin: 0 -10px 0 -10px;
   border-bottom: 1px solid #ccc;
   font-weight: 300;
 }
-.active h1 strong {
+
+.chatheader strong {
   color: #FF7500;
 }
+
 .file, em {
   color: #999;
   font-style: italic;
 }
+
+#peerbox {
+  border-width: 1px;
+  border-color: #ccc;
+  border-style: solid;
+  margin-top: 10px;
+}
+
+#peerlist {
+  overflow: auto;
+}
+
 #wrap {
   background-color: #ddd;
   border-width: 1px 0;
   border-color: #ccc;
   border-style: solid;
 }
+
+#box {
+  background: #fff;
+  font-size: 18px;
+  padding:40px 30px;
+  text-align: center;
+}
+
 .clear {
   clear: both;
 }
+
 .peer {
   color: #FF7500;
   font-weight: 600;
 }
+
 .you {
   color: #0C6BA1;
   font-weight: 600;
 }
+
 #pid {
   display: inline-block;
   padding: 5px;
@@ -65,10 +93,13 @@ h1 {
   color: #0C6BA1;
   font-weight: 600;
 }
+
 .warning {
   font-size: 12px;
   line-height: 20px;
   padding: 10px;
+  margin-right: -15px;
+  margin-left: -15px;
   background-color: #333;
   color: #fff;
   text-shadow: 0 1px 0 rgba(0,0,0,0.4);
@@ -77,13 +108,23 @@ h1 {
   border-color: #000;
   border-style: solid;
 }
+
+#log {
+  color:#FF7500;
+  text-shadow:none;
+  padding:15px;
+  background:#eee
+}
+
 a {
   color: #F2C777;
 }
+
 .filler {
   display: block;
   padding: 10px;
 }
+
 #actions {
   padding: 10px;
 }
@@ -99,19 +140,21 @@ button, input {
   color: #444;
   text-shadow: 0 1px 0 rgba(255,255,255,0.4);
 }
+
 input:focus {
   outline: none;
 }
+
 .button, button {
   cursor: pointer;
   background-color: #ddd;
   border: 1px solid #ccc;
-
-
 }
+
 form {
   display: inline-block;
 }
+
 #close {
   background-color: #FF7500;
   border-color: #c15c06;
