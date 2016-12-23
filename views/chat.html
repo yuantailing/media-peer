@@ -123,7 +123,7 @@ $(document).ready(function() {
         e.originalEvent.preventDefault();
         var file = e.originalEvent.dataTransfer.files[0];
         eachActiveConnection(function(c, $c) {
-            if (c.label === 'file') {
+            if (c.label === 'file' && c.open) {
                 c.send(file);
                 $c.find('.messages').append('<div><span class="file">You sent a file.</span></div>');
             }
@@ -170,7 +170,7 @@ $(document).ready(function() {
         // For each active connection, send the message.
         var msg = $('#text').val();
         eachActiveConnection(function(c, $c) {
-            if (c.label === 'chat') {
+            if (c.label === 'chat' && c.open) {
                 c.send(msg);
                 $c.find('.messages').append('<div><span class="you">You: </span>' + msg
                     + '</div>');
