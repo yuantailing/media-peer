@@ -165,3 +165,11 @@ form {
   color: #F2C777;
   margin-bottom: 10px;
 }
+
+.peerlist-item {
+    width: 100%;
+    cursor: pointer;
+}
+.peerlist-item.active {
+    background-color: rgb(224, 224, 255);
+}

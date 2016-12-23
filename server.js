@@ -20,6 +20,8 @@ var ExpressPeerServer = require('peer').ExpressPeerServer;
 var peerServer = ExpressPeerServer(server, options);
 app.use('/peerjs', peerServer);
 
+var nickTable = Object();
+
 peerServer.on('connection', function(id) {
         console.log('peerServer.on(\'connection\'): ' + id);
         sendPeerListToClients();
@@ -27,14 +29,24 @@ peerServer.on('connection', function(id) {
 
 peerServer.on('disconnect', function(id) {
         console.log('peerServer.on(\'disconnect\'): ' + id);
+        delete nickTable[id];
         sendPeerListToClients();
+    });
+
+peerServer.on('userdefined', function(id, payload) {
+        if (payload.type == 'NICKNAME') {
+            console.log('NICKNAME ' + id + ' ' + payload.payload.toString());
+            nickTable[id] = payload.payload.toString();
+            sendPeerListToClients();
+        }
     });
 
 function sendPeerListToClients() {
     var peers = peerServer._clients.peerjs;
     var ids = Array();
     for (peer in peers)
-        ids.push(peer);
+        ids.push([peer, nickTable[peer]]);
     for (peer in peers)
-        peers[peer].socket.send(JSON.stringify({type: 'PEER-LIST', payload: {peers: ids}}));
+        if (peers[peer].socket.readyState == peers[peer].socket.OPEN)
+            peers[peer].socket.send(JSON.stringify({type: 'PEER-LIST', payload: {peers: ids}}));
 }

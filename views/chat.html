@@ -9,6 +9,7 @@
 <link href="/css/fancy.css" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
 <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="/js/js.cookie.js"></script>
 <script type="text/javascript" src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="http://cdn.peerjs.com/0.3/peer.js"></script>
 
@@ -33,10 +34,25 @@ var peer = new Peer({
         if (arguments.length == 3 && arguments[2].type == 'PEER-LIST') {
             var peerList = arguments[2].payload.peers;
             $('.log').append('PEER-LIST ' + JSON.stringify(peerList) + '<br>');
-            $('#peerlist').empty();
+            var domPeerList = $('#peerlist');
+            domPeerList.empty();
             for (var i = 0; i < peerList.length; i ++) {
-                $('#peerlist').append('<p>' + peerList[i] + '</p>');
+                var item = $('#peerlist-item-template').clone();
+                item.removeAttr('id');
+                item.attr('peerid', peerList[i][0]);
+                item.find('#peerlist-item-nickname').text(peerList[i][1] || peerList[i][0]);
+                if (peerList[i][0] == $('#rid').val())
+                    item.addClass('active');
+                domPeerList.append(item);
+                item.show();
             }
+            $('.peerlist-item').click(function() {
+                if ($(this).attr('peerid') == peer.id)
+                    return;
+                $('.peerlist-item').removeClass("active");
+                $(this).addClass('active');
+                $("#rid").val($(this).attr("peerid"));
+            });
         } else {
             var copy = Array.prototype.slice.call(arguments).join(' ');
             $('.log').append(copy + '<br>');
@@ -47,7 +63,10 @@ var connectedPeers = {};
 
 // Show this peer's ID.
 peer.on('open', function(id){
-    $('#pid').text(id);
+    // Set nickname
+    var nickname = Cookies.get('nickname');
+    $('#nickname').val(nickname);
+    peer.socket.send({type: 'USERDEFINED', payload:{type: 'NICKNAME', payload: nickname}});
 });
 
 // Await connections from others
@@ -114,6 +133,13 @@ function connect(c) {
 $(document).ready(function() {
     // Set peerbox height
     setPeerBoxHeight();
+
+    // Save nickname
+    $('#saveNickname').click(function() {
+        var nickname = $('#nickname').val();
+        Cookies.set('nickname', nickname, { expires: 365 });
+        peer.socket.send({type: 'USERDEFINED', payload: {type: 'NICKNAME', payload: nickname}});
+    });
 
     // Prepare file drop box.
     var box = $('#box');
@@ -222,11 +248,14 @@ window.onunload = window.onbeforeunload = function(e) {
         <hr style="margin-top: 0px;">
         <div id="peerlist">
         </div>
+        <div class="peerlist-item" id="peerlist-item-template" hidden>
+            <span id="peerlist-item-nickname"></span>
+        </div>
     </div>
     <div class="col-sm-10" id="tools">
         <div id="actions">
-            Your PeerJS ID is <span id="pid"></span><br>
-            Connect to a peer: <input type="text" id="rid" placeholder="Someone else's id"><input class="button" type="button" value="Connect" id="connect"><br><br>
+            <p>Nickname: <input type="text" id="nickname" value="Anonymous" placeholder="Your nickname"><input class="button" type="button" value="Save" id="saveNickname"></p>
+            <p>Connect to a peer: <input type="text" id="rid" placeholder="Someone else's id"><input class="button" type="button" value="Connect" id="connect"></p>
 
             <form id="send">
                 <input type="text" id="text" placeholder="Enter message"><input class="button" type="submit" value="Send to selected peers">
