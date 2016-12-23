@@ -32,9 +32,9 @@ peerServer.on('disconnect', function(id) {
 
 function sendPeerListToClients() {
     var peers = peerServer._clients.peerjs;
-    var str = "PEER_LIST";
+    var ids = Array();
     for (peer in peers)
-        str += " " + peer;
+        ids.push(peer);
     for (peer in peers)
-        peers[peer].socket.send(str);
+        peers[peer].socket.send(JSON.stringify({type: 'PEER-LIST', payload: {peers: ids}}));
 }

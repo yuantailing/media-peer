@@ -30,9 +30,9 @@ var peer = new Peer({
 
     // Set a logging function:
     logFunction: function() {
-        if (arguments.length == 2 && arguments[0] == "Invalid server message" && arguments[1].startsWith("PEER_LIST")) {
-            var peerList = arguments[1].split(' ').slice(1);
-            $('.log').append(JSON.stringify(peerList) + '<br>');
+        if (arguments.length == 3 && arguments[2].type == 'PEER-LIST') {
+            var peerList = arguments[2].payload.peers;
+            $('.log').append('PEER-LIST ' + JSON.stringify(peerList) + '<br>');
             $('#peerlist').empty();
             for (var i = 0; i < peerList.length; i ++) {
                 $('#peerlist').append('<p>' + peerList[i] + '</p>');
