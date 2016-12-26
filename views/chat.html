@@ -55,12 +55,31 @@ var peer = new Peer({
                 $(this).addClass('active');
                 $("#rid").val($(this).attr("peerid"));
             });
+            connectToFirstPeerOnOpen();
         } else {
             var copy = Array.prototype.slice.call(arguments).join(' ');
             $('.log').append(copy + '<br>');
         }
     }
 });
+
+var connectedToFirstPeerOnOpen = false;
+function connectToFirstPeerOnOpen() {
+    if (Object.keys(peer.connections).length)
+        connectedToFirstPeerOnOpen = true;
+    $("#peerlist .peerlist-item").each(function(k,v) {
+        if (!connectedToFirstPeerOnOpen) {
+            var peerid = $(v).attr('peerid');
+            if (peerid != peer.id) {
+                console.log(1);
+                $('#rid').val(peerid);
+                $('#connect').click();
+                connectedToFirstPeerOnOpen = true;
+            }
+        }
+    });
+}
+
 var connectedPeers = {};
 
 // Show this peer's ID.
