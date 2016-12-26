@@ -208,7 +208,7 @@ $(document).ready(function() {
 
     // Goes through each active peer and calls FN on its connections.
     function eachActiveConnection(fn) {
-        var actives = $('.active');
+        var actives = $('.connection.active');
         var checkedIds = {};
         actives.each(function() {
             var peerId = $(this).attr('id');
