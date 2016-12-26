@@ -96,6 +96,7 @@ function runCommand(text) {
 function myCommand(text, files, cb) {
   if (isReady()) {
     window.ffmpeg_cb = cb;
+    window.ffmpeg_info = {total:0, segs:[]};
     startRunning();
     var args = parseArguments(text);
     console.log(args);
@@ -133,7 +134,6 @@ function initWorker() {
   worker = new Worker("/demo/worker-asm.js");
   worker.onmessage = function (event) {
     var message = event.data;
-    console.log(event);
     if (message.type == "ready") {
       isWorkerLoaded = true;
       worker.postMessage({
@@ -142,6 +142,20 @@ function initWorker() {
       });
     } else if (message.type == "stdout") {
       //outputElement.textContent += message.data + "\n";
+      if (message.data.startsWith("  Duration")) {
+          var tt = message.data.substr(12,11);
+          console.log("get duration");
+          console.log(tt);
+          var h = parseFloat(tt.substr(0,2));
+          var m = parseFloat(tt.substr(3,2));
+          var s = parseFloat(tt.substr(6,5));
+          console.log(h*60*60 + m*60 + s);
+          window.ffmpeg_info.total = h*60*60 + m*60 + s;
+      } else if (message.data.indexOf("starts with packet") >= 0) {
+          tt = parseFloat(message.data.split("pts_time:")[1].split(" ")[0]);
+          console.log("get pts " + tt);
+          window.ffmpeg_info.segs.push(tt);
+      }
       console.log( message.data + "\n");
     } else if (message.type == "start") {
       //outputElement.textContent = "Worker has received command\n";
@@ -153,7 +167,7 @@ function initWorker() {
         //outputElement.className = "closed";
       }
       if (window.ffmpeg_cb) {
-          window.ffmpeg_cb(buffers);
+          window.ffmpeg_cb(buffers, window.ffmpeg_info);
       }
       buffers.forEach(function(file) {
         //filesElement.appendChild(getDownloadLink(file.data, file.name));
