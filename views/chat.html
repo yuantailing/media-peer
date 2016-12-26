@@ -42,6 +42,8 @@ var peer = new Peer({
                 item.removeAttr('id');
                 item.attr('peerid', peerList[i][0]);
                 item.find('#peerlist-item-nickname').text(peerList[i][1] || peerList[i][0]);
+                if (peerList[i][0] == peer.id)
+                    item.find('#peerlist-item-nickname').append(' (You)');
                 if (peerList[i][0] == $('#rid').val())
                     item.addClass('active');
                 domPeerList.append(item);
@@ -54,12 +56,31 @@ var peer = new Peer({
                 $(this).addClass('active');
                 $("#rid").val($(this).attr("peerid"));
             });
+            connectToFirstPeerOnOpen();
         } else {
             var copy = Array.prototype.slice.call(arguments).join(' ');
             $('.log').append(copy + '<br>');
         }
     }
 });
+
+var connectedToFirstPeerOnOpen = false;
+function connectToFirstPeerOnOpen() {
+    if (Object.keys(peer.connections).length)
+        connectedToFirstPeerOnOpen = true;
+    $("#peerlist .peerlist-item").each(function(k,v) {
+        if (!connectedToFirstPeerOnOpen) {
+            var peerid = $(v).attr('peerid');
+            if (peerid != peer.id) {
+                console.log(1);
+                $('#rid').val(peerid);
+                $('#connect').click();
+                connectedToFirstPeerOnOpen = true;
+            }
+        }
+    });
+}
+
 var connectedPeers = {};
 
 // Show this peer's ID.
@@ -109,7 +130,7 @@ function connect(c) {
                 '</div>');
                 });
                 c.on('close', function() {
-                    alert(c.peer + ' has left the chat.');
+                    // alert(c.peer + ' has left the chat.');
                     chatbox.remove();
                     if ($('.connection').length === 0) {
                         $('.filler').show();
@@ -137,7 +158,7 @@ function connect(c) {
                 var dataView = new Uint8Array(data);
                 var dataBlob = new Blob([dataView]);
                 var url = window.URL.createObjectURL(dataBlob);
-                $('#' + c.peer).find('.messages').append('<div><span><img class="recieved-image" src="' +
+                $('#' + c.peer).find('.messages').append('<div><span class="peer">' + c.peer + '</span>: <span><img class="recieved-image" src="' +
                         url + '"/></span></div>');
                 nextType = null;
             } else if (nextType == 'video') {
@@ -145,7 +166,7 @@ function connect(c) {
                 var dataView = new Uint8Array(data);
                 var dataBlob = new Blob([dataView]);
                 var url = window.URL.createObjectURL(dataBlob);
-                $('#' + c.peer).find('.messages').append('<div><span><video class="recieved-video" src="' +
+                $('#' + c.peer).find('.messages').append('<div><span class="peer">' + c.peer + '</span>: <span><video class="recieved-video" src="' +
                         url + '" controls="controls">Your browser does not support the video tag.</video></span></div>');
                 nextType = null;
             }
@@ -208,7 +229,15 @@ $(document).ready(function() {
                         ftype = 'file';
                     c.send(ftype);
                     c.send(file);
-                    $c.find('.messages').append('<div><span class="file">You sent a ' + ftype + '.</span></div>');
+                    var url = window.URL.createObjectURL(file);
+                    if (ftype == 'file')
+                        $c.find('.messages').append('<div><span class="file">You sent a <a target="_blank" href="' + url + '">file</a>.</span></div>');
+                    else if (ftype == 'image')
+                        $c.find('.messages').append('<div><span class="you">You: </span><span><img class="recieved-image" src="' +
+                            url + '"/></span></div>');
+                    else if (ftype == 'video')
+                        $c.find('.messages').append('<div><span class="you">You: </span><span><video class="recieved-video" src="' +
+                            url + '" controls="controls">Your browser does not support the video tag.</video></span></div>');
                 }
             });
         }
