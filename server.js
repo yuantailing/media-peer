@@ -35,8 +35,13 @@ peerServer.on('disconnect', function(id) {
 
 peerServer.on('userdefined', function(id, payload) {
         if (payload.type == 'NICKNAME') {
-            console.log('NICKNAME ' + id + ' ' + payload.payload.toString());
-            nickTable[id] = payload.payload.toString();
+            var nickname = payload.payload;
+            if (!nickname)
+                nickname = null;
+            else
+                nickname = nickname.toString();
+            console.log('NICKNAME ' + id + ' ' + nickname);
+            nickTable[id] = nickname;
             sendPeerListToClients();
         }
     });
