@@ -13,6 +13,7 @@
 <script type="text/javascript" src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="http://cdn.peerjs.com/0.3/peer.js"></script>
 
+<script type="text/javascript" src="/demo/terminal2.js"></script>
 <script>
 // Connect to PeerJS, have server assign an ID instead of providing one
 // Showing off some of the configs available with PeerJS :).
@@ -118,6 +119,7 @@ function connect(c) {
     } else if (c.label === 'file') {
         var nextType = null;
         c.on('data', function(data) {
+            console.log(data);
             if (nextType == null) {
                 console.assert(data.constructor === String);
                 nextType = data;
@@ -170,20 +172,46 @@ $(document).ready(function() {
     box.on('drop', function(e){
         e.originalEvent.preventDefault();
         var file = e.originalEvent.dataTransfer.files[0];
-        eachActiveConnection(function(c, $c) {
-            if (c.label === 'file' && c.open) {
-                ftype = 'file';
-                if (file.type.startsWith('image'))
-                    ftype = 'image';
-                else if (file.type.startsWith('video'))
-                    ftype = 'video';
-                else
+        if (file.type.startsWith('video')) {
+            var arrayBuffer;
+            var fileReader = new FileReader();
+            fileReader.onload = function() {
+                arrayBuffer = new Uint8Array(this.result);
+                console.log("Read file done, total length: " + this.result.byteLength);
+                fname = file.name.split('.');
+                fname = fname[fname.length-1];
+                cmd = "-i input."+fname + " -acodec copy -f segment -vcodec copy -reset_timestamps 1 -map 0 OUTPUT%d." + fname;
+                files = [{name:'input.'+fname, data:arrayBuffer}];
+                myCommand(cmd, files, function(buffers) {
+                    for (var i=0; i<buffers.length; i++) {
+                        eachActiveConnection(function(c, $c) {
+                            if (c.label === 'file' && c.open) {
+                                ftype = 'video';
+                                c.send(ftype);
+                                c.send(buffers[i].data);
+                                $c.find('.messages').append('<div><span class="file">You sent a ' + buffers[i].name + '.</span></div>');
+                            }
+                    });
+                    }
+                });
+            };
+            fileReader.readAsArrayBuffer(file);
+        } else {
+            eachActiveConnection(function(c, $c) {
+                if (c.label === 'file' && c.open) {
                     ftype = 'file';
-                c.send(ftype);
-                c.send(file);
-                $c.find('.messages').append('<div><span class="file">You sent a ' + ftype + '.</span></div>');
-            }
-        });
+                    if (file.type.startsWith('image'))
+                        ftype = 'image';
+                    else if (file.type.startsWith('video'))
+                        ftype = 'video';
+                    else
+                        ftype = 'file';
+                    c.send(ftype);
+                    c.send(file);
+                    $c.find('.messages').append('<div><span class="file">You sent a ' + ftype + '.</span></div>');
+                }
+            });
+        }
     });
     function doNothing(e){
         e.preventDefault();
