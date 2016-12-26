@@ -138,6 +138,14 @@ function connect(c) {
                 $('#' + c.peer).find('.messages').append('<div><span><img class="recieved-image" src="' +
                         url + '"/></span></div>');
                 nextType = null;
+            } else if (nextType == 'video') {
+                console.assert(data.constructor === ArrayBuffer);
+                var dataView = new Uint8Array(data);
+                var dataBlob = new Blob([dataView]);
+                var url = window.URL.createObjectURL(dataBlob);
+                $('#' + c.peer).find('.messages').append('<div><span><video class="recieved-video" src="' +
+                        url + '" controls="controls">Your browser does not support the video tag.</video></span></div>');
+                nextType = null;
             }
         });
     }

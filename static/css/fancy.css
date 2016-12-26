@@ -11,7 +11,7 @@ body,html {
 
 .connection {
   /*float: left;*/
-  height: 250px;
+  height: 400px;
   /*width: 200px;*/
   overflow: auto;
   background-color: #fff;
@@ -175,6 +175,11 @@ form {
 }
 
 img.recieved-image {
-    max-width: 200px;
-    max-height: 150px;
+    max-width: 300px;
+    max-height: 240px;
+}
+
+video.recieved-video {
+    max-width: 500px;
+    max-height: 375px;
 }
