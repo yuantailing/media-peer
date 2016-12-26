@@ -41,6 +41,8 @@ var peer = new Peer({
                 item.removeAttr('id');
                 item.attr('peerid', peerList[i][0]);
                 item.find('#peerlist-item-nickname').text(peerList[i][1] || peerList[i][0]);
+                if (peerList[i][0] == peer.id)
+                    item.find('#peerlist-item-nickname').append(' (You)');
                 if (peerList[i][0] == $('#rid').val())
                     item.addClass('active');
                 domPeerList.append(item);
