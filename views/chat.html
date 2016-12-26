@@ -138,37 +138,30 @@ function connect(c) {
                     delete connectedPeers[c.peer];
                 });
     } else if (c.label === 'file') {
-        var nextType = null;
         c.on('data', function(data) {
             console.log(data);
-            if (nextType == null) {
-                console.assert(data.constructor === String);
-                nextType = data;
-            } else if (nextType == 'file') {
+            if (data.type == 'file') {
                 // If we're getting a file, create a URL for it.
-                console.assert(data.constructor === ArrayBuffer);
-                var dataView = new Uint8Array(data);
+                console.assert(data.file.constructor === ArrayBuffer);
+                var dataView = new Uint8Array(data.file);
                 var dataBlob = new Blob([dataView]);
                 var url = window.URL.createObjectURL(dataBlob);
                 $('#' + c.peer).find('.messages').append('<div><span class="file">' +
                         c.peer + ' has sent you a <a target="_blank" href="' + url + '">file</a>.</span></div>');
-                nextType = null;
-            } else if (nextType == 'image') {
-                console.assert(data.constructor === ArrayBuffer);
-                var dataView = new Uint8Array(data);
+            } else if (data.type == 'image') {
+                console.assert(data.file.constructor === ArrayBuffer);
+                var dataView = new Uint8Array(data.file);
                 var dataBlob = new Blob([dataView]);
                 var url = window.URL.createObjectURL(dataBlob);
                 $('#' + c.peer).find('.messages').append('<div><span class="peer">' + c.peer + '</span>: <span><img class="recieved-image" src="' +
                         url + '"/></span></div>');
-                nextType = null;
-            } else if (nextType == 'video') {
-                console.assert(data.constructor === ArrayBuffer);
-                var dataView = new Uint8Array(data);
+            } else if (data.type == 'video') {
+                console.assert(data.file.constructor === ArrayBuffer);
+                var dataView = new Uint8Array(data.file);
                 var dataBlob = new Blob([dataView]);
                 var url = window.URL.createObjectURL(dataBlob);
                 $('#' + c.peer).find('.messages').append('<div><span class="peer">' + c.peer + '</span>: <span><video class="recieved-video" src="' +
                         url + '" controls="controls">Your browser does not support the video tag.</video></span></div>');
-                nextType = null;
             }
         });
     }
@@ -208,8 +201,7 @@ $(document).ready(function() {
                         eachActiveConnection(function(c, $c) {
                             if (c.label === 'file' && c.open) {
                                 ftype = 'video';
-                                c.send(ftype);
-                                c.send(buffers[i].data);
+                                c.send({type:ftype, file:buffers[i].data});
                                 $c.find('.messages').append('<div><span class="file">You sent a ' + buffers[i].name + '.</span></div>');
                             }
                     });
@@ -227,8 +219,7 @@ $(document).ready(function() {
                         ftype = 'video';
                     else
                         ftype = 'file';
-                    c.send(ftype);
-                    c.send(file);
+                    c.send({type:ftype,file:file});
                     var url = window.URL.createObjectURL(file);
                     if (ftype == 'file')
                         $c.find('.messages').append('<div><span class="file">You sent a <a target="_blank" href="' + url + '">file</a>.</span></div>');
