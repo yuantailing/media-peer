@@ -173,3 +173,8 @@ form {
 .peerlist-item.active {
     background-color: rgb(224, 224, 255);
 }
+
+img.recieved-image {
+    max-width: 200px;
+    max-height: 150px;
+}
