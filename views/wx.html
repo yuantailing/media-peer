@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>PeerJS</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="https://res.wx.qq.com/zh_CN/htmledition/v2/images/favicon31e225.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="https://res.wx.qq.com/zh_CN/htmledition/v2/css/base/base31e225.css">
+</head>
+<body>
+    <div class="main" style="display:block">
+        <div class="main_inner">
+            <div class="panel">
+                <div class="header">
+                    <div class="avatar">
+                        <img class="img" src="http://gravatar.com/avatar/8b1a9953c4611296a827abf8c47804d7?default=retro">
+                    </div>
+                    <div class="info">
+                        <h3 class="nickname">
+                            <span ng-bind-html="account.NickName" class="display_name ng-binding">Hello</span>
+                            <a class="opt" href="javascript:;"><i class="web_wechat_add"></i></a>
+                        </h3>
+                    </div>
+                </div>
+                <div class="search_bar" id="search_bar">
+                    <i class="web_wechat_search"></i>
+                    <input class="frm_search ng-isolate-scope ng-pristine ng-valid" type="text" placeholder="搜索">
+                </div>
+                <div class="tab">
+                    <div class="tab_item">
+                        <a class="chat" title="聊天" href="#"><i class="web_wechat_tab_chat web_wechat_tab_chat_hl"></i></a>
+                    </div>
+                    <div class="tab_item ng-scope">
+                        <a class="chat" title="阅读" href="#"><i class="web_wechat_tab_public"></i></a>
+                    </div>
+                    <div class="tab_item no_extra">
+                        <a class="chat" title="通讯录" href="#"><i class="web_wechat_tab_friends"></i></a>
+                    </div>
+                </div>
+                <div id="navView" class="ng-scope"></div>
+                <div class="nav_view ng-scope">
+                    <div class="scroll-wrapper chat_list scrollbar-dynamic" style="position: relative;">
+                        <div class="chat_list scrollbar-dynamic scroll-content scroll-scrolly_visible">
+
+                            <!-- peer list -->
+                            <div class="ng-scope">
+                                <div class="chat_item slide-left ng-scope">
+                                    <div class="avatar">
+                                        <img class="img" src="http://gravatar.com/avatar/f5a7924e621e84c9280a9a27e1bcb7f6?default=retro" alt="">
+                                    </div>
+                                    <div class="info">
+                                        <h3 class="nickname">
+                                            <span class="nickname_text ng-binding">World</span>
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="height:100%" class="ng-scope">
+                <div id="chatArea" class="box chat ng-scope no-choose">
+                    <div class="box_hd">
+                        <div class="title_wrap">
+                            <div class="title poi">
+                                <a class="title_name ng-binding">World</a>
+                                <i class="web_wechat_down_icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="scroll-wrapper box_bd chat_bd scrollbar-dynamic" style="position: absolute;">
+                        <div class="box_bd chat_bd scrollbar-dynamic scroll-content" style="margin-bottom: 0px; margin-right: 0px; height: 431px;">
+                            <div class="ng-scope"><!-- MESSAGE -->
+                                <div class="clearfix" style="overflow: hidden;">
+                                    <div class="message ng-scope me">
+                                        <p ng-if="message.MMTime" class="message_system ng-scope"><span class="content ng-binding">Today</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ng-scope"><!-- MESSAGE -->
+                                <div class="clearfix" style="overflow: hidden;">
+                                    <div class="message ng-scope me">
+                                        <img class="avatar" src="http://gravatar.com/avatar/8b1a9953c4611296a827abf8c47804d7?default=retro" title="Your Name">
+                                        <div class="content">
+                                            <div class="bubble js_message_bubble ng-scope bubble_primary right">
+                                                <div class="bubble_cont ng-scope">
+                                                    <div class="plain">
+                                                        <pre class="js_message_plain ng-binding">message</pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ng-scope"><!-- MESSAGE -->
+                                <div class="clearfix" style="overflow: hidden;">
+                                    <div class="message ng-scope you">
+                                        <img class="avatar" src="http://gravatar.com/avatar/f5a7924e621e84c9280a9a27e1bcb7f6?default=retro" title="Your Name">
+                                        <div class="content">
+                                            <div class="bubble js_message_bubble ng-scope bubble_default left">
+                                                <div class="bubble_cont ng-scope">
+                                                    <div class="plain">
+                                                        <pre class="js_message_plain ng-binding">message</pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="scroll-element scroll-y scroll-scrolly_visible"><div class="scroll-element_corner"></div><div class="scroll-arrow scroll-arrow_less"></div><div class="scroll-arrow scroll-arrow_more"></div><div class="scroll-element_outer">    <div class="scroll-element_size"></div>    <div class="scroll-element_inner-wrapper">        <div class="scroll-element_inner scroll-element_track">            <div class="scroll-element_inner-bottom"></div>        </div>    </div>    <div class="scroll-bar" style="height: 348px; top: 79px;">        <div class="scroll-bar_body">            <div class="scroll-bar_body-inner"></div>        </div>        <div class="scroll-bar_bottom"></div>        <div class="scroll-bar_center"></div>    </div></div></div>
+                    </div>
+                    <div class="box_ft ng-scope">
+                        <div class="toolbar" id="tool_bar">
+                            <a class="web_wechat_face" ng-click="showEmojiPanel($event)" href="javascript:;" title="表情"></a>
+                            <a mm-action-track="" track-type="['click']" track-opt="{'target':'截图'}" class="web_wechat_screencut ng-isolate-scope" ng-hide="noflash" ng-click="screenShot()" href="javascript:;" title="截屏"></a>
+                            <a mm-action-track="" track-type="['click']" ng-click="sendClick($event)" track-opt="{'target':'发文件'}" class="web_wechat_pic js_fileupload ng-isolate-scope webuploader-container" ng-hide="noflash" href="javascript:;" title="图片和文件"><div class="webuploader-pick"></div><div id="rt_rt_1b4tmjj8t149219br14cp1jha1ldv1" style="position: absolute; top: 0px; left: 0px; width: 30px; height: 30px; overflow: hidden; bottom: auto; right: auto;"><input type="file" name="file" class="webuploader-element-invisible" multiple="multiple"><label style="opacity: 0; width: 100%; height: 100%; display: block; cursor: pointer; background: rgb(255, 255, 255);"></label></div></a>
+                        </div>
+                        <div class="content ng-isolate-scope">
+                            <pre id="editArea" class="flex edit_area ng-isolate-scope ng-valid ng-dirty" contenteditable="true" ></pre>
+                            <span class="caret_pos_helper" id="caretPosHelper"></span>
+                        </div>
+                        <div class="action">
+                            <span class="desc ng-scope">按下Enter换行</span>
+                            <a class="btn btn_send" href="javascript:;">发送</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
