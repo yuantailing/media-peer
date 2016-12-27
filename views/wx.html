@@ -258,8 +258,10 @@ function connect(c) {
         c.on('close', function() {
             var peerid = c.peer;
             var he = peer.connections[peerid];
-            he.chatArea.remove();
-            delete he.chatArea;
+            if (he.chatArea) {
+                he.chatArea.remove();
+                delete he.chatArea;
+            }
             if (peerid == peerActive)
                 peerActive = null;
             updateActiveView();
@@ -396,8 +398,8 @@ function createChatArea(peerid) {
 }
 
 function appendToChatBox(peerid, html, mine) {
-    var chatbox = $('.peer_chatAreaItem[peerid=' + peerid + '] #peer_chatMessageBox');
-    var his = $(mine ? '#peer_chatAreaTemplate #peer_chatMessageMeTemplate' : '#peer_chatAreaTemplate #peer_chatMessageYouTemplate').clone();
+    var chatbox = $('.peer_chatAreaItem[peerid=' + peerid + ']').find('#peer_chatMessageBox');
+    var his = $('#peer_chatAreaTemplate').find(mine ? '#peer_chatMessageMeTemplate' : '#peer_chatMessageYouTemplate').clone();
     his.removeAttr('id');
     his.removeAttr('hidden');
     var placeholder = his.find('#peer_chatMessageMessagePlaceholder');
@@ -425,9 +427,7 @@ function autoConnectToFirstPeerForDebug() {
     if (!peerActive) {
         $.each(peerList, function(idx, peertuple) {
             var peerid = peertuple[0];
-                console.log(peerid);
             if (!peerActive && peerid != peer.id) {
-                console.log(peerid);
                 $('#J_NavChatScrollBody [peerid=' + peerid + ']').click();
             }
         });
