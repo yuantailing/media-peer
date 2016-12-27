@@ -103,7 +103,7 @@
                         </div>
                     </div>
                     <div id="peer_chatAreaTemplate" class="peer_chatAreaItem scroll-wrapper box_bd chat_bd scrollbar-dynamic" style="position: absolute;" hidden>
-                        <div id="peer_chatMessageBox" class="box_bd chat_bd scrollbar-dynamic " style="top: 0; margin-bottom: 0px; margin-right: 0px; overflow: hidden;">
+                        <div id="peer_chatMessageBox" class="box_bd chat_bd scrollbar-dynamic " style="height: 100%; top: 0; margin-bottom: 0px; margin-right: 0px; overflow: scroll;">
                             <div class="ng-scope">
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope me">
@@ -144,7 +144,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="scroll-element scroll-y scroll-scrolly_visible"><div class="scroll-element_corner"></div><div class="scroll-arrow scroll-arrow_less"></div><div class="scroll-arrow scroll-arrow_more"></div><div class="scroll-element_outer">    <div class="scroll-element_size"></div>    <div class="scroll-element_inner-wrapper">        <div class="scroll-element_inner scroll-element_track">            <div class="scroll-element_inner-bottom"></div>        </div>    </div>    <div class="scroll-bar" style="height: 348px; top: 79px;">        <div class="scroll-bar_body">            <div class="scroll-bar_body-inner"></div>        </div>        <div class="scroll-bar_bottom"></div>        <div class="scroll-bar_center"></div>    </div></div></div>
                     </div>
                     <div id="peer_inputComponent" class="box_ft ng-scope" style="display: none;">
                         <div class="toolbar" id="tool_bar">
@@ -165,7 +164,7 @@
             </div>
         </div>
     </div>
-    <div class="container">
+    <div class="container" hidden>
         <div class="warning browser">
             <div class="important">Your browser version: <span id="browsers"></span><br>
             Currently <strong>Firefox 22+ and Google Chrome 26.0.1403.0 or above</strong> is required.</div>
@@ -212,8 +211,15 @@ var peerActive = null;
                             serialization: 'none',
                             metadata: {message: 'hi i want to chat with you!'}
                         });
-                        var he = peer.connections[peerid];
-                        he.chatArea = createChatArea(peerid);
+                        var f = peer.connect(peerid, { label: 'file', reliable: true });
+                        c.on('open', function() {
+                            connect(this);
+                        });
+                        c.on('error', function(err) { alert(err); });
+                        f.on('open', function() {
+                            connect(this);
+                        });
+                        f.on('error', function(err) { alert(err); });
                     }
                     peerActive = peerid;
                     updateActiveView();
@@ -244,18 +250,12 @@ function connect(c) {
         var he = peer.connections[c.peer];
         he.chatArea = createChatArea(c.peer);
         c.on('data', function(data) {
-            var he = peer.connections[(this).peer];
-            var his = $('#peer_chatAreaTemplate #peer_chatMessageYouTemplate').clone();
-            his.removeAttr('id');
-            his.removeAttr('hidden');
             var pre = $('<pre class="js_message_plain"></pre>');
             pre.text(data);
-            his.find('#peer_chatMessageMessagePlaceholder').html(pre);
-            his.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[c.peer]));
-            he.chatArea.find('#peer_chatMessageBox').append(his);
+            appendToChatBox(c.peer, pre, false);
         });
         c.on('close', function() {
-            var peerid = (this).peer;
+            var peerid = c.peer;
             var he = peer.connections[peerid];
             he.chatArea.remove();
             delete he.chatArea;
@@ -265,7 +265,28 @@ function connect(c) {
         });
         updateActiveView();
     } else if (c.label === 'file') {
-        // ignore it
+        c.on('data', function(data) {
+            if (data.type == 'video') {
+            } else if (data.type == 'image') {
+                console.assert(data.file.constructor === ArrayBuffer);
+                var dataView = new Uint8Array(data.file);
+                var dataBlob = new Blob([dataView]);
+                var url = window.URL.createObjectURL(dataBlob);
+                var img = $('<img style="max-height: 200px; max-width: 300px;"/>');
+                img.attr('src', url);
+                appendToChatBox(c.peer, img, false);
+            } else {
+                console.assert(data.type == 'file');
+                // If we're getting a file, create a URL for it.
+                console.assert(data.file.constructor === ArrayBuffer);
+                var dataView = new Uint8Array(data.file);
+                var dataBlob = new Blob([dataView]);
+                var url = window.URL.createObjectURL(dataBlob);
+                var div = $('<div>You recieved a <a target="_blank">file</a>.</div>');
+                div.find('a').attr('href', url);
+                appendToChatBox(c.peer, div, false);
+            }
+        });
     }
 }
 
@@ -281,20 +302,39 @@ $(document).ready(function() {
     $('#peer_sendMessage').click(function() {
         var text = $('#editArea').text();
         if (peerActive && peer.connections[peerActive] && text) {
-            $.each(peer.connections[peerActive], function(idx, c) {
-                if (c.label == 'chat')
-                    c.send(text)
-            });
+            activeConnectionSend('chat', text);
             $('#editArea').empty();
-            var chatbox = $('.peer_chatAreaItem[peerid=' + peerActive + ']');
-            var mine = $('#peer_chatAreaTemplate #peer_chatMessageMeTemplate').clone();
-            mine.removeAttr('id');
-            mine.removeAttr('hidden');
             var pre = $('<pre class="js_message_plain"></pre>');
             pre.text(text);
-            mine.find('#peer_chatMessageMessagePlaceholder').html(pre);
-            mine.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[peer.id]));
-            chatbox.find('#peer_chatMessageBox').append(mine);            
+            appendToChatBox(peerActive, pre, true);
+        }
+    });
+    
+    function doNothing(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    var box = $('body');
+    box.on('dragenter', doNothing);
+    box.on('dragover', doNothing);
+    box.on('drop', function(e) {
+        e.originalEvent.preventDefault();
+        if (peerActive && peer.connections[peerActive]) {
+            var file = e.originalEvent.dataTransfer.files[0];
+            if (file.type.startsWith('video')) {
+            } else if (file.type.startsWith('image')) {
+                activeConnectionSend('file', {type: 'image', file: file});
+                var url = window.URL.createObjectURL(file);
+                var img = $('<img style="max-height: 200px; max-width: 300px;"/>');
+                img.attr('src', url);
+                appendToChatBox(peerActive, img, true);
+            } else {
+                activeConnectionSend('file', {type: 'file', file: file});
+                var url = window.URL.createObjectURL(file);
+                var div = $('<div>You sent a <a target="_blank">file</a>.</div>');
+                div.find('a').attr('href', url);
+                appendToChatBox(peerActive, div, true);
+            }
         }
     });
 });
@@ -352,6 +392,28 @@ function createChatArea(peerid) {
     chatArea.attr('peerid', peerid);
     $('#chatArea').append(chatArea);
     return chatArea;
+}
+
+function appendToChatBox(peerid, html, mine) {
+    var chatbox = $('.peer_chatAreaItem[peerid=' + peerid + '] #peer_chatMessageBox');
+    var his = $(mine ? '#peer_chatAreaTemplate #peer_chatMessageMeTemplate' : '#peer_chatAreaTemplate #peer_chatMessageYouTemplate').clone();
+    his.removeAttr('id');
+    his.removeAttr('hidden');
+    var placeholder = his.find('#peer_chatMessageMessagePlaceholder');
+    placeholder.empty();
+    placeholder.html(html);
+    his.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[peerid]));
+    chatbox.append(his);
+    chatbox.scrollTop(chatbox.height());
+}
+
+function activeConnectionSend(label, data) {
+    if (peerActive && peer.connections[peerActive]) {
+        $.each(peer.connections[peerActive], function(idx, c) {
+            if (c.label == label)
+                c.send(data)
+        });
+    }
 }
 
 </script>
