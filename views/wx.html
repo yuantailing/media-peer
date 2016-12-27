@@ -64,7 +64,7 @@
                 <div id="navView" class="ng-scope"></div>
                 <div class="nav_view ng-scope">
                     <div class="scroll-wrapper chat_list scrollbar-dynamic" style="position: relative;">
-                        <div id="J_NavChatScrollBody" class="chat_list scrollbar-dynamic scroll-scrolly_visible">
+                        <div id="J_NavChatScrollBody" class="chat_list scrollbar-dynamic scroll-scrolly_visible" style="overflow-y: scroll;">
                             <!-- peer list -->
                         </div>
                         <div hidden>
@@ -104,7 +104,7 @@
                         </div>
                     </div>
                     <div id="peer_chatAreaTemplate" class="peer_chatAreaItem scroll-wrapper box_bd chat_bd scrollbar-dynamic" style="position: absolute;" hidden>
-                        <div class="peer_chatMessageBox box_bd chat_bd scrollbar-dynamic " style="height: 100%; top: 0; margin-bottom: 0px; margin-right: 0px; overflow: scroll;">
+                        <div class="peer_chatMessageBox box_bd chat_bd scrollbar-dynamic " style="height: 100%; top: 0; margin-bottom: 0px; margin-right: 0px; overflow-y: scroll;">
                             <div class="ng-scope">
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope me">
@@ -438,6 +438,15 @@ $(document).ready(function() {
         var nickname = $('#peer_nickname').text();
         Cookies.set('nickname', nickname, { expires: 365 });
         updatePeerNicknameAvatar();
+    });
+
+    $("#editArea").bind("keydown", function(e) {
+        var event = e || window.event;
+        var code = event.keyCode || event.which || event.charCode;
+        if (code == 13) {
+            e.preventDefault();
+            $("#peer_sendMessage").click();
+        }
     });
 
     $('#peer_sendMessage').click(function() {
