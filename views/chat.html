@@ -147,6 +147,16 @@ function connect(c) {
         c.on('data', function(data) {
             console.log(data);
             if (data.type == 'file') {
+
+                if (window.mytimer) {
+                    window.mytimer ++;
+                    console.timeEnd(1);
+                } else {
+                    window.mytimer = 1;
+                    console.time(1);
+                }
+                console.log(window.mytimer);
+
                 // If we're getting a file, create a URL for it.
                 console.assert(data.file.constructor === ArrayBuffer);
                 var dataView = new Uint8Array(data.file);
@@ -162,37 +172,118 @@ function connect(c) {
                 $('#' + c.peer).find('.messages').append('<div><span class="peer">' + c.peer + '</span>: <span><img class="recieved-image" src="' +
                         url + '"/></span></div>');
             } else if (data.type == 'video') {
-                var dataView = new Uint8Array(data.file.data);
-                var dataBlob = new Blob([dataView]);
-                var url = window.URL.createObjectURL(dataBlob);
-                var fid = data.file.fid + "";
-                var segid = data.file.segid;
-                fid = fid.substr(2);
-                myvideos[fid].video_dom.src = url;
-                mainbar = $(myvideos[fid].bar_dom).find(".main-bar");
-                var total = myvideos[fid].finfo.total;
-                var segs = myvideos[fid].finfo.segs;
-                var start = segs[segid] / total;
-                var end = segs[segid+1] / total;
-                mainbar.append('<div style="position: absolute;left: ' + start*100 + '%;width: '+ (end-start)*100 +'% ;height: 20px;background-color: green;"></div>');
+                function noname() {
+                    var dataView = new Uint8Array(data.file.data);
+                    var dataBlob = new Blob([dataView]);
+                    var url = window.URL.createObjectURL(dataBlob);
+                    var fid = data.file.fid + "";
+                    var segid = data.file.segid;
+                    fid = fid.substr(2);
+                    var video = myvideos[fid];
+                    //video.video_dom.src = url;
+                    mainbar = $(video.bar_dom).find(".main-bar");
+                    var total = video.finfo.total;
+                    var segs = video.finfo.segs;
+                    var start = segs[segid] / total;
+                    var end = segs[segid+1] / total;
+                    mainbar.prepend('<div style="position: absolute;left: ' + start*100 + '%;width: '+ (end-start)*100 +'% ;height: 20px;background-color: green;"></div>');
+                    video.urls[segid] = url;
+                    video.check_play();
+                };
+                noname();
             } else if (data.type == 'video-info') {
-                var fid = data.file.fid + "";
-                fid = fid.substr(2);
-                myvideos[fid] = {finfo: data.file};
-                m = Math.floor(data.file.total/60);
-                s = data.file.total - m*60;
-                $('#' + c.peer).find('.messages').append('<div><span class="peer">' + c.peer + '</span>: <span><video id="' + fid + '" class="recieved-video">Your browser does not support the video tag.</video>' +
-                '<div style="margin:0 0 0 0;" class="mybar mybar-' + fid + '"><icon style="   float: left;">►</icon><div class="main-bar" style="position: relative;margin:0 0 0 0;float:left;width: 80%;height: 20px;background-color: black;"><div style="/* float: left; */position: absolute;/* left: 15%; */width: 5px;/* top: 0px; */height: 20px;/* z-index: -1; */background-color: green;"></div><div style="float: left;width: 80%;height: 20px;background-color: red;"></div></div>  <div class="mytime">00:00/' + m + ':' + s +  '</div></div>' +
-                '</span></div>');
-                var video_dom = myvideos[fid].video_dom = $("#"+fid)[0];
-                var bar_dom = myvideos[fid].bar_dom = $(".mybar-"+fid)[0];
-                var total = myvideos[fid].finfo.total;
-                var segs = myvideos[fid].finfo.segs;
-                segs.push(total);
+                function noname() {
+                    var fid = data.file.fid + "";
+                    fid = fid.substr(2);
+                    var video = myvideos[fid] = {finfo: data.file, urls:[], c_seg:0, pg:0.0};
+                    m = Math.floor(data.file.total/60);
+                    s = data.file.total - m*60;
+                    $('#' + c.peer).find('.messages').append('<div><span class="peer">' + c.peer + '</span>: <span><video style="height:375px" id="' + fid + '" class="recieved-video">Your browser does not support the video tag.</video>' +
+                    '<div style="margin:0 0 0 0;" class="mybar mybar-' + fid + '"><icon class="play-btn" style="   float: left;"><a>►</a></icon><div class="main-bar" style="position: relative;margin:0 0 0 0;float:left;width: 80%;height: 20px;background-color: black;"><div class="mycursor" style="position: absolute;width: 5px;height: 20px;background-color: red;"></div><div class="mycover" style="position: absolute;width: 100%;height: 20px;background-color: rgba(255,255,255,0);"></div></div>  <div class="mytime">00:00</div><div> /' + m + ':' + Math.floor(s) +  '</div></div>' +
+                    '</span></div>');
+                    var video_dom = video.video_dom = $("#"+fid)[0];
+                    var bar_dom = video.bar_dom = $(".mybar-"+fid)[0];
+                    var total = video.finfo.total;
+                    var segs = video.finfo.segs;
+                    var mycover = video.mycover = $(bar_dom).find(".mycover");
+                    var mycursor = video.mycursor = $(bar_dom).find(".mycursor");
+                    var mybtn = video.mybtn = $(bar_dom).find(".play-btn");
+                    var mytime = video.mytime = $(bar_dom).find(".mytime");
 
-                var play = function(vid) {
+                    video_dom.onended = function() {
+                        if (video.c_seg == video.finfo.segs.length - 2) {
+                            video.pg = 0;
+                            video.check_play();
+                            video_dom.ontimeupdate();
+                        } else {
+                            var i = video.c_seg + 1;
+                            var url = video.urls[i];
+                            if (url) {
+                                if (video.video_dom.src != url) {
+                                    video.video_dom.src = url;
+                                    video.c_seg = i;
+                                }
+                                video.video_dom.currentTime = 0;
+                                video.video_dom.play();
+                            }
+                        }
+                    }
 
-                }
+                    video_dom.ontimeupdate = function() {
+                        var now = video_dom.currentTime + video.finfo.segs[video.c_seg];
+                        video.pg = now / video.finfo.total;
+                        mycursor.css("left", video.pg*100 + "%");
+                        m = Math.floor(now/60);
+                        s = Math.floor(now - m*60);
+                        video.mytime.html(m + ':' + s);
+                    }
+
+                    video.check_play = function() {
+                        var i = 0;
+                        var pts = video.pg * video.finfo.total;
+                        for (;i<video.finfo.segs.length && video.finfo.segs[i]<pts; i++);
+                        i--;
+                        if (i<0) i=0;
+                        var url = video.urls[i];
+                        if (url) {
+                            if (video.video_dom.src != url) {
+                                video.video_dom.src = url;
+                                video.c_seg = i;
+                            }
+                            video.video_dom.currentTime = pts - video.finfo.segs[i];
+                        }
+                    };
+
+                    video.play = function() {
+                        var i = 0;
+                        var pts = video.pg * video.finfo.total;
+                        for (;i<video.finfo.segs.length && video.finfo.segs[i]<pts; i++);
+                        i--;
+                        if (i<0) i=0;
+                        var url = video.urls[i];
+                        if (url) {
+                            if (video.video_dom.src != url) {
+                                video.video_dom.src = url;
+                                video.c_seg = i;
+                            }
+                            video_dom.play();
+                        }
+                    }
+
+                    mybtn.on("click", function() {
+                        video.play();
+                    });
+                    segs.push(total);
+                    $(bar_dom).find(".mycover").on('click', function (e) {
+                        console.log(e);
+                        var pg = e.offsetX / mycover.width();
+
+                        mycursor.css("left", pg*100 + "%");
+                        video.pg = pg;
+                        video.check_play();
+                    });
+                };
+                noname();
             }
         });
     }
@@ -250,7 +341,7 @@ $(document).ready(function() {
         } else {
             eachActiveConnection(function(c, $c) {
                 if (c.label === 'file' && c.open) {
-                    ftype = 'file';
+                    var ftype = 'file';
                     if (file.type.startsWith('image'))
                         ftype = 'image';
                     else if (file.type.startsWith('video'))
@@ -258,6 +349,21 @@ $(document).ready(function() {
                     else
                         ftype = 'file';
                     c.send({type:ftype,file:file});
+                    setInterval(function() {
+
+                        if (window.mytimer) {
+                            window.mytimer ++;
+                            console.timeEnd(1);
+                        } else {
+                            window.mytimer = 1;
+                            console.time(1);
+                        }
+                        console.log(window.mytimer);
+
+
+                        c.send({type:ftype,file:file});
+                        console.log(c.bufferSize);
+                    }, 10);
                     var url = window.URL.createObjectURL(file);
                     if (ftype == 'file')
                         $c.find('.messages').append('<div><span class="file">You sent a <a target="_blank" href="' + url + '">file</a>.</span></div>');
