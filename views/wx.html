@@ -176,7 +176,7 @@
     </div>
 </body>
 <script type="text/javascript">
-var chatHistory = {};
+var peerList = [];
 var peerid2nickname = {};
 var peerActive = null;
 
@@ -189,7 +189,7 @@ var peerActive = null;
     debug: 3,
     logFunction: function() {
         if (arguments.length == 3 && arguments[2].type == 'PEER-LIST') {
-            var peerList = arguments[2].payload.peers;
+            peerList = arguments[2].payload.peers;
             $('#log').append('PEER-LIST ' + JSON.stringify(peerList) + '<br>');
             var navBox = $('#J_NavChatScrollBody');
             navBox.empty();
@@ -228,6 +228,7 @@ var peerActive = null;
                 navBox.append(item);
             }
             updateActiveView();
+            autoConnectToFirstPeerForDebug();
         } else {
             var copy = Array.prototype.slice.call(arguments).join(' ');
             $('#log').append(copy + '<br>');
@@ -570,13 +571,30 @@ function appendToChatBox(peerid, html, mine) {
     his.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[peerid]));
     chatbox.append(his);
     chatbox.scrollTop(chatbox.height());
+    if (!peerActive) {
+        peerActive = peerid;
+        updateActiveView();
+    }
 }
 
 function activeConnectionSend(label, data) {
     if (peerActive && peer.connections[peerActive]) {
         $.each(peer.connections[peerActive], function(idx, c) {
-            if (c.label == label)
+            if (c.label == label && c.open)
                 c.send(data)
+        });
+    }
+}
+
+function autoConnectToFirstPeerForDebug() {
+    if (!peerActive) {
+        $.each(peerList, function(idx, peertuple) {
+            var peerid = peertuple[0];
+                console.log(peerid);
+            if (!peerActive && peerid != peer.id) {
+                console.log(peerid);
+                $('#J_NavChatScrollBody [peerid=' + peerid + ']').click();
+            }
         });
     }
 }
