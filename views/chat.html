@@ -71,8 +71,9 @@ function connectToFirstPeerOnOpen() {
     $("#peerlist .peerlist-item").each(function(k,v) {
         if (!connectedToFirstPeerOnOpen) {
             var peerid = $(v).attr('peerid');
-            if (peerid != peer.id) {
-                console.log(1);
+            if (k == 0 && peerid == peer.id)
+                connectedToFirstPeerOnOpen = true;
+            else if (peerid != peer.id) {
                 $('#rid').val(peerid);
                 $('#connect').click();
                 connectedToFirstPeerOnOpen = true;
@@ -129,14 +130,14 @@ function connect(c) {
             messages.append('<div><span class="peer">' + c.peer + '</span>: ' + data +
                 '</div>');
                 });
-                c.on('close', function() {
-                    // alert(c.peer + ' has left the chat.');
-                    chatbox.remove();
-                    if ($('.connection').length === 0) {
-                        $('.filler').show();
-                    }
-                    delete connectedPeers[c.peer];
-                });
+        c.on('close', function() {
+            // alert(c.peer + ' has left the chat.');
+            chatbox.remove();
+            if ($('.connection').length === 0) {
+                $('.filler').show();
+            }
+            delete connectedPeers[c.peer];
+        });
     } else if (c.label === 'file') {
         c.on('data', function(data) {
             console.log(data);
