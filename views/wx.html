@@ -31,13 +31,12 @@
     </style>
 </head>
 <body>
-
     <div class="main" style="display:block">
         <div class="main_inner">
             <div class="panel">
                 <div class="header">
                     <div class="avatar">
-                        <img id="peer_nicknameAvatar" class="img">
+                        <img id="peer_nicknameAvatar" class="img" src="#">
                     </div>
                     <div class="info">
                         <h3 class="nickname">
@@ -93,6 +92,20 @@
                             </div>
 
                         </div>
+                        <div hidden>
+                            <div id="peer_listItemTemplate" class="ng-scope">
+                                <div class="chat_item slide-left ng-scope">
+                                    <div class="avatar">
+                                        <img id="peer_nicknameAvatar" class="img" src="#" alt="">
+                                    </div>
+                                    <div class="info">
+                                        <h3 class="nickname">
+                                            <span id="peer_nicknameText" class="nickname_text ng-binding">Tsinghua</span>
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -134,7 +147,7 @@
                             <div id="peer_chatMessageYouTemplate" class="ng-scope" hidden><!-- MESSAGE -->
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope you">
-                                        <img class="avatar" src="http://gravatar.com/avatar/f5a7924e621e84c9280a9a27e1bcb7f6?default=retro" title="Your Name">
+                                        <img id="peer_chatMessageAvatar" class="avatar" src="#" title="Your Name">
                                         <div class="content">
                                             <div class="bubble js_message_bubble ng-scope bubble_default left">
                                                 <div class="bubble_cont ng-scope">
@@ -181,6 +194,7 @@
 </body>
 <script type="text/javascript">
 var chatHistory = {};
+var peerid2nickname = {};
 
 /*var */peer = new Peer({
     host: window.location.hostname, port: window.location.port || null, path: '/peerjs',
@@ -193,19 +207,24 @@ var chatHistory = {};
         if (arguments.length == 3 && arguments[2].type == 'PEER-LIST') {
             var peerList = arguments[2].payload.peers;
             $('#log').append('PEER-LIST ' + JSON.stringify(peerList) + '<br>');
-            var domPeerList = $('#peerlist');
-            domPeerList.empty();
-            for (var i = 0; i < peerList.length; i ++) {
-                var item = $('#peerlist-item-template').clone();
+            var navBox = $('#J_NavChatScrollBody');
+            navBox.empty();
+            for (var i = 0; i < peerList.length; i++) {
+                var peerid = peerList[i][0];
+                var peernick = peerList[i][1];
+                peerid2nickname[peerid] = peernick;
+                if (peerid == peer.id)
+                    continue;
+                var item = $('#peer_listItemTemplate').clone();
                 item.removeAttr('id');
+                var nickname = peernick || peerid;
+                item.attr('peerid', peerid);
+                item.find('#peer_nicknameText').text(nickname);
+                item.find('#peer_nicknameAvatar').attr('src', avatarUrl(nickname));
+                navBox.append(item);
                 item.attr('peerid', peerList[i][0]);
-                item.find('#peerlist-item-nickname').text(peerList[i][1] || peerList[i][0]);
-                if (peerList[i][0] == peer.id)
-                    item.find('#peerlist-item-nickname').append(' (You)');
-                if (peerList[i][0] == $('#rid').val())
-                    item.addClass('active');
-                domPeerList.append(item);
-                item.show();
+                //if (peerList[i][0] == $('#rid').val())
+                //    item.addClass('active');
             }
             $('.peerlist-item').click(function() {
                 if ($(this).attr('peerid') == peer.id)
@@ -247,6 +266,7 @@ function connect(c) {
             var pre = $('<pre class="js_message_plain"></pre>');
             pre.text(data);
             his.find('#peer_chatMessageMessagePlaceholder').html(pre);
+            his.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[c.peer]));
             he.chatArea.find('#peer_chatMessageBox').append(his);
         });
         c.on('close', function() {
@@ -283,7 +303,8 @@ function updatePeerNicknameAvatar() {
     var nickname = Cookies.get('nickname');
     $('#peer_nickname').text(nickname);
     $('#peer_nicknameAvatar').attr('src', avatarUrl(nickname));
-    peer.socket.send({type: 'USERDEFINED', payload:{type: 'NICKNAME', payload: nickname}});
+    console.log(peer.socket);
+    peer.socket.send({type: 'ABCDEFG', payload:{type: 'NICKNAME', payload: nickname}});
 }
 
 function avatarUrl(email) {
