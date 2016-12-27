@@ -255,9 +255,13 @@ function connect(c) {
             he.chatArea.find('#peer_chatMessageBox').append(his);
         });
         c.on('close', function() {
-            var he = peer.connections[(this).peer];
+            var peerid = (this).peer;
+            var he = peer.connections[peerid];
             he.chatArea.remove();
             delete he.chatArea;
+            if (peerid == peerActive)
+                peerActive = null;
+            updateActiveView();
         });
         updateActiveView();
     } else if (c.label === 'file') {
@@ -275,8 +279,23 @@ $(document).ready(function() {
     });
 
     $('#peer_sendMessage').click(function() {
-        var text = $('.editArea').text();
-
+        var text = $('#editArea').text();
+        if (peerActive && peer.connections[peerActive] && text) {
+            $.each(peer.connections[peerActive], function(idx, c) {
+                if (c.label == 'chat')
+                    c.send(text)
+            });
+            $('#editArea').empty();
+            var chatbox = $('.peer_chatAreaItem[peerid=' + peerActive + ']');
+            var mine = $('#peer_chatAreaTemplate #peer_chatMessageMeTemplate').clone();
+            mine.removeAttr('id');
+            mine.removeAttr('hidden');
+            var pre = $('<pre class="js_message_plain"></pre>');
+            pre.text(text);
+            mine.find('#peer_chatMessageMessagePlaceholder').html(pre);
+            mine.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[peer.id]));
+            chatbox.find('#peer_chatMessageBox').append(mine);            
+        }
     });
 });
 
