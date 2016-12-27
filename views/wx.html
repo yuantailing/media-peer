@@ -19,7 +19,7 @@
                     </div>
                     <div class="info">
                         <h3 class="nickname">
-                            <span ng-bind-html="account.NickName" class="display_name ng-binding">Hello</span>
+                            <span class="display_name ng-binding">Hello</span>
                             <a class="opt" href="javascript:;"><i class="web_wechat_add"></i></a>
                         </h3>
                     </div>
@@ -89,7 +89,7 @@
                             <div class="ng-scope"><!-- MESSAGE -->
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope me">
-                                        <p ng-if="message.MMTime" class="message_system ng-scope"><span class="content ng-binding">Today</span></p>
+                                        <p class="message_system ng-scope"><span class="content ng-binding">Today</span></p>
                                     </div>
                                 </div>
                             </div>
@@ -130,9 +130,9 @@
                     </div>
                     <div class="box_ft ng-scope">
                         <div class="toolbar" id="tool_bar">
-                            <a class="web_wechat_face" ng-click="showEmojiPanel($event)" href="javascript:;" title="表情"></a>
-                            <a mm-action-track="" track-type="['click']" track-opt="{'target':'截图'}" class="web_wechat_screencut ng-isolate-scope" ng-hide="noflash" ng-click="screenShot()" href="javascript:;" title="截屏"></a>
-                            <a mm-action-track="" track-type="['click']" ng-click="sendClick($event)" track-opt="{'target':'发文件'}" class="web_wechat_pic js_fileupload ng-isolate-scope webuploader-container" ng-hide="noflash" href="javascript:;" title="图片和文件"><div class="webuploader-pick"></div><div id="rt_rt_1b4tmjj8t149219br14cp1jha1ldv1" style="position: absolute; top: 0px; left: 0px; width: 30px; height: 30px; overflow: hidden; bottom: auto; right: auto;"><input type="file" name="file" class="webuploader-element-invisible" multiple="multiple"><label style="opacity: 0; width: 100%; height: 100%; display: block; cursor: pointer; background: rgb(255, 255, 255);"></label></div></a>
+                            <a class="web_wechat_face" href="javascript:;" title="表情"></a>
+                            <a class="web_wechat_screencut ng-isolate-scope" href="javascript:;" title="截屏"></a>
+                            <a class="web_wechat_pic js_fileupload ng-isolate-scope webuploader-container" href="javascript:;" title="图片和文件"><div class="webuploader-pick"></div><div id="rt_rt_1b4tmjj8t149219br14cp1jha1ldv1" style="position: absolute; top: 0px; left: 0px; width: 30px; height: 30px; overflow: hidden; bottom: auto; right: auto;"><input type="file" name="file" class="webuploader-element-invisible" multiple="multiple"><label style="opacity: 0; width: 100%; height: 100%; display: block; cursor: pointer; background: rgb(255, 255, 255);"></label></div></a>
                         </div>
                         <div class="content ng-isolate-scope">
                             <pre id="editArea" class="flex edit_area ng-isolate-scope ng-valid ng-dirty" contenteditable="true" ></pre>
