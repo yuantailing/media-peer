@@ -8,8 +8,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="/img/favicon31e225.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="/css/base31e225.css">
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/peer.min.js"></script>
+    <script type="text/javascript" src="/js/js.cookie.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+    <style type="text/css">
+.warning {
+  font-size: 12px;
+  line-height: 20px;
+  padding: 10px;
+  margin-right: 50px;
+  margin-left: 50px;
+  background-color: #333;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+  font-weight: 300;
+  border-width: 1px 0;
+  border-color: #000;
+  border-style: solid;
+}
+    </style>
 </head>
 <body>
+
     <div class="main" style="display:block">
         <div class="main_inner">
             <div class="panel">
@@ -19,7 +40,7 @@
                     </div>
                     <div class="info">
                         <h3 class="nickname">
-                            <span class="display_name ng-binding">Hello</span>
+                            <span id="peer_nickname" class="display_name ng-binding" contenteditable="true">Hello</span>
                             <a class="opt" href="javascript:;"><i class="web_wechat_add"></i></a>
                         </h3>
                     </div>
@@ -45,7 +66,7 @@
                         <div id="J_NavChatScrollBody" class="chat_list scrollbar-dynamic scroll-scrolly_visible">
 
                             <!-- peer list -->
-                            <div class="ng-scope">
+                            <div class="ng-scope" hidden>
                                 <div class="chat_item slide-left ng-scope active">
                                     <div class="avatar">
                                         <img class="img" src="http://gravatar.com/avatar/f5a7924e621e84c9280a9a27e1bcb7f6?default=retro" alt="">
@@ -57,7 +78,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="ng-scope">
+                            <div id="peer_listItemTemplate" class="ng-scope" hidden>
                                 <div class="chat_item slide-left ng-scope">
                                     <div class="avatar">
                                         <img class="img" src="http://gravatar.com/avatar/6c5c1441e3283e7543342e59277ea219?default=retro" alt="">
@@ -147,5 +168,58 @@
             </div>
         </div>
     </div>
+    <div class="container">
+        <div class="warning browser">
+            <div class="important">Your browser version: <span id="browsers"></span><br>
+            Currently <strong>Firefox 22+ and Google Chrome 26.0.1403.0 or above</strong> is required.</div>
+            For more up to date compatibility information see <a href="http://peerjs.com/status">PeerJS WebRTC Status</a><br>
+            Note that this demo may also fail if you are behind stringent firewalls or both you and the remote peer and behind symmetric NATs.
+        <div id="log"><strong>Connection status</strong>:<br></div>
+        </div>
+    </div>
 </body>
+<script type="text/javascript">
+var peer = new Peer({
+    host: window.location.hostname, port: window.location.port || null, path: '/peerjs',
+    config: {'iceServers': [
+        { url: 'stun:stun.l.google.com:19302' },
+        { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
+    ]},
+    debug: 3,
+    logFunction: function() {
+        if (arguments.length == 3 && arguments[2].type == 'PEER-LIST') {
+            var peerList = arguments[2].payload.peers;
+            $('#log').append('PEER-LIST ' + JSON.stringify(peerList) + '<br>');
+            var domPeerList = $('#peerlist');
+            domPeerList.empty();
+            for (var i = 0; i < peerList.length; i ++) {
+                var item = $('#peerlist-item-template').clone();
+                item.removeAttr('id');
+                item.attr('peerid', peerList[i][0]);
+                item.find('#peerlist-item-nickname').text(peerList[i][1] || peerList[i][0]);
+                if (peerList[i][0] == peer.id)
+                    item.find('#peerlist-item-nickname').append(' (You)');
+                if (peerList[i][0] == $('#rid').val())
+                    item.addClass('active');
+                domPeerList.append(item);
+                item.show();
+            }
+            $('.peerlist-item').click(function() {
+                if ($(this).attr('peerid') == peer.id)
+                    return;
+                $('.peerlist-item').removeClass("active");
+                $(this).addClass('active');
+                $("#rid").val($(this).attr("peerid"));
+            });
+            connectToFirstPeerOnOpen();
+        } else {
+            var copy = Array.prototype.slice.call(arguments).join(' ');
+            $('#log').append(copy + '<br>');
+        }
+    }
+});
+$(document).ready(function() {
+    $('#browsers').text(navigator.userAgent);
+});
+</script>
 </html>
