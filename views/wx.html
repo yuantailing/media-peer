@@ -103,7 +103,7 @@
                         </div>
                     </div>
                     <div id="peer_chatAreaTemplate" class="peer_chatAreaItem scroll-wrapper box_bd chat_bd scrollbar-dynamic" style="position: absolute;" hidden>
-                        <div id="peer_chatMessageBox" class="box_bd chat_bd scrollbar-dynamic " style="height: 100%; top: 0; margin-bottom: 0px; margin-right: 0px; overflow: scroll;">
+                        <div class="peer_chatMessageBox box_bd chat_bd scrollbar-dynamic " style="height: 100%; top: 0; margin-bottom: 0px; margin-right: 0px; overflow: scroll;">
                             <div class="ng-scope">
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope me">
@@ -111,7 +111,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div id="peer_chatMessageMeTemplate" class="ng-scope" hidden><!-- MESSAGE -->
+                            <div class="peer_chatMessageMeTemplate ng-scope" hidden><!-- MESSAGE -->
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope me">
                                         <img id="peer_chatMessageAvatar" class="avatar">
@@ -127,7 +127,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div id="peer_chatMessageYouTemplate" class="ng-scope" hidden><!-- MESSAGE -->
+                            <div class="peer_chatMessageYouTemplate ng-scope" hidden><!-- MESSAGE -->
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope you">
                                         <img id="peer_chatMessageAvatar" class="avatar">
@@ -398,8 +398,8 @@ function createChatArea(peerid) {
 }
 
 function appendToChatBox(peerid, html, mine) {
-    var chatbox = $('.peer_chatAreaItem[peerid=' + peerid + ']').find('#peer_chatMessageBox');
-    var his = $('#peer_chatAreaTemplate').find(mine ? '#peer_chatMessageMeTemplate' : '#peer_chatMessageYouTemplate').clone();
+    var chatbox = $('.peer_chatAreaItem[peerid=' + peerid + '] .peer_chatMessageBox');
+    var his = $(mine ? '#peer_chatAreaTemplate .peer_chatMessageMeTemplate' : '#peer_chatAreaTemplate .peer_chatMessageYouTemplate').clone();
     his.removeAttr('id');
     his.removeAttr('hidden');
     var placeholder = his.find('#peer_chatMessageMessagePlaceholder');
@@ -424,7 +424,7 @@ function activeConnectionSend(label, data) {
 }
 
 function autoConnectToFirstPeerForDebug() {
-    if (!peerActive) {
+    if (!peerActive && peerList.length && peer.id != peerList[0][0]) {
         $.each(peerList, function(idx, peertuple) {
             var peerid = peertuple[0];
             if (!peerActive && peerid != peer.id) {
