@@ -103,7 +103,7 @@
                         </div>
                     </div>
                     <div id="peer_chatAreaTemplate" class="peer_chatAreaItem scroll-wrapper box_bd chat_bd scrollbar-dynamic" style="position: absolute;" hidden>
-                        <div id="peer_chatMessageBox" class="box_bd chat_bd scrollbar-dynamic " style="top: 0; margin-bottom: 0px; margin-right: 0px; overflow: hidden;">
+                        <div id="peer_chatMessageBox" class="box_bd chat_bd scrollbar-dynamic " style="height: 100%; top: 0; margin-bottom: 0px; margin-right: 0px; overflow: scroll;">
                             <div class="ng-scope">
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope me">
@@ -144,7 +144,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="scroll-element scroll-y scroll-scrolly_visible"><div class="scroll-element_corner"></div><div class="scroll-arrow scroll-arrow_less"></div><div class="scroll-arrow scroll-arrow_more"></div><div class="scroll-element_outer">    <div class="scroll-element_size"></div>    <div class="scroll-element_inner-wrapper">        <div class="scroll-element_inner scroll-element_track">            <div class="scroll-element_inner-bottom"></div>        </div>    </div>    <div class="scroll-bar" style="height: 348px; top: 79px;">        <div class="scroll-bar_body">            <div class="scroll-bar_body-inner"></div>        </div>        <div class="scroll-bar_bottom"></div>        <div class="scroll-bar_center"></div>    </div></div></div>
                     </div>
                     <div id="peer_inputComponent" class="box_ft ng-scope" style="display: none;">
                         <div class="toolbar" id="tool_bar">
@@ -165,7 +164,7 @@
             </div>
         </div>
     </div>
-    <div class="container">
+    <div class="container" hidden>
         <div class="warning browser">
             <div class="important">Your browser version: <span id="browsers"></span><br>
             Currently <strong>Firefox 22+ and Google Chrome 26.0.1403.0 or above</strong> is required.</div>
@@ -245,6 +244,7 @@ function connect(c) {
         he.chatArea = createChatArea(c.peer);
         c.on('data', function(data) {
             var he = peer.connections[(this).peer];
+            var chatbox = he.chatArea.find('#peer_chatMessageBox');
             var his = $('#peer_chatAreaTemplate #peer_chatMessageYouTemplate').clone();
             his.removeAttr('id');
             his.removeAttr('hidden');
@@ -252,7 +252,8 @@ function connect(c) {
             pre.text(data);
             his.find('#peer_chatMessageMessagePlaceholder').html(pre);
             his.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[c.peer]));
-            he.chatArea.find('#peer_chatMessageBox').append(his);
+            chatbox.append(his);
+            chatbox.scrollTop(chatbox.height());
         });
         c.on('close', function() {
             var peerid = (this).peer;
@@ -286,7 +287,7 @@ $(document).ready(function() {
                     c.send(text)
             });
             $('#editArea').empty();
-            var chatbox = $('.peer_chatAreaItem[peerid=' + peerActive + ']');
+            var chatbox = $('.peer_chatAreaItem[peerid=' + peerActive + '] #peer_chatMessageBox');
             var mine = $('#peer_chatAreaTemplate #peer_chatMessageMeTemplate').clone();
             mine.removeAttr('id');
             mine.removeAttr('hidden');
@@ -294,7 +295,8 @@ $(document).ready(function() {
             pre.text(text);
             mine.find('#peer_chatMessageMessagePlaceholder').html(pre);
             mine.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[peer.id]));
-            chatbox.find('#peer_chatMessageBox').append(mine);            
+            chatbox.append(mine);
+            chatbox.scrollTop(chatbox.height());
         }
     });
 });
