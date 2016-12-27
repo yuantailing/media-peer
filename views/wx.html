@@ -211,8 +211,17 @@ var peerActive = null;
                             serialization: 'none',
                             metadata: {message: 'hi i want to chat with you!'}
                         });
-                        var he = peer.connections[peerid];
-                        he.chatArea = createChatArea(peerid);
+                        var f = peer.connect(peerid, { label: 'file', reliable: true });
+                        c.on('open', function() {
+                            connect(this);
+                        });
+                        c.on('error', function(err) { alert(err); });
+                        f.on('open', function() {
+                            connect(this);
+                        });
+                        f.on('error', function(err) { alert(err); });
+                        //var he = peer.connections[peerid];
+                        //he.chatArea = createChatArea(peerid);
                     }
                     peerActive = peerid;
                     updateActiveView();
