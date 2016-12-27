@@ -11,7 +11,7 @@
 <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
 <script type="text/javascript" src="/js/js.cookie.js"></script>
 <script type="text/javascript" src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="http://cdn.peerjs.com/0.3/peer.js"></script>
+<script type="text/javascript" src="/js/peer.js"></script>
 
 <script type="text/javascript" src="/demo/terminal2.js"></script>
 <style media="screen">
@@ -350,21 +350,6 @@ $(document).ready(function() {
                     else
                         ftype = 'file';
                     c.send({type:ftype,file:file});
-                    setInterval(function() {
-
-                        if (window.mytimer) {
-                            window.mytimer ++;
-                            console.timeEnd(1);
-                        } else {
-                            window.mytimer = 1;
-                            console.time(1);
-                        }
-                        console.log(window.mytimer);
-
-
-                        c.send({type:ftype,file:file});
-                        console.log(c.bufferSize);
-                    }, 10);
                     var url = window.URL.createObjectURL(file);
                     if (ftype == 'file')
                         $c.find('.messages').append('<div><span class="file">You sent a <a target="_blank" href="' + url + '">file</a>.</span></div>');
