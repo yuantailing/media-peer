@@ -9,6 +9,7 @@
     <link rel="shortcut icon" href="/img/favicon31e225.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="/css/base31e225.css">
     <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jQuery.md5.js"></script>
     <script type="text/javascript" src="/js/peer.min.js"></script>
     <script type="text/javascript" src="/js/js.cookie.js"></script>
     <script type="text/javascript" src="/js/bootstrap.min.js"></script>
@@ -36,11 +37,11 @@
             <div class="panel">
                 <div class="header">
                     <div class="avatar">
-                        <img class="img" src="http://gravatar.com/avatar/8b1a9953c4611296a827abf8c47804d7?default=retro">
+                        <img id="peer_nicknameAvatar" class="img">
                     </div>
                     <div class="info">
                         <h3 class="nickname">
-                            <span id="peer_nickname" class="display_name ng-binding" contenteditable="true">Hello</span>
+                            <span id="peer_nickname" class="display_name ng-binding" contenteditable="true"></span>
                             <a class="opt" href="javascript:;"><i class="web_wechat_add"></i></a>
                         </h3>
                     </div>
@@ -105,23 +106,23 @@
                             </div>
                         </div>
                     </div>
-                    <div class="scroll-wrapper box_bd chat_bd scrollbar-dynamic" style="position: absolute;">
-                        <div class="box_bd chat_bd scrollbar-dynamic" style="margin-bottom: 0px; margin-right: 0px; height: 431px; overflow: hidden;">
-                            <div class="ng-scope"><!-- MESSAGE -->
+                    <div id="peer_chatAreaTemplate" class="scroll-wrapper box_bd chat_bd scrollbar-dynamic" style="position: absolute;" hidden>
+                        <div id="peer_chatMessageBox" class="box_bd chat_bd scrollbar-dynamic " style="top: 0; margin-bottom: 0px; margin-right: 0px; overflow: hidden;">
+                            <div class="ng-scope">
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope me">
                                         <p class="message_system ng-scope"><span class="content ng-binding">Today</span></p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="ng-scope"><!-- MESSAGE -->
+                            <div id="peer_chatMessageMeTemplate" class="ng-scope" hidden><!-- MESSAGE -->
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope me">
                                         <img class="avatar" src="http://gravatar.com/avatar/8b1a9953c4611296a827abf8c47804d7?default=retro" title="Your Name">
                                         <div class="content">
                                             <div class="bubble js_message_bubble ng-scope bubble_primary right">
                                                 <div class="bubble_cont ng-scope">
-                                                    <div class="plain">
+                                                    <div id="peer_chatMessageMessagePlaceholder" class="plain">
                                                         <pre class="js_message_plain ng-binding">message</pre>
                                                     </div>
                                                 </div>
@@ -130,14 +131,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="ng-scope"><!-- MESSAGE -->
+                            <div id="peer_chatMessageYouTemplate" class="ng-scope" hidden><!-- MESSAGE -->
                                 <div class="clearfix" style="overflow: hidden;">
                                     <div class="message ng-scope you">
                                         <img class="avatar" src="http://gravatar.com/avatar/f5a7924e621e84c9280a9a27e1bcb7f6?default=retro" title="Your Name">
                                         <div class="content">
                                             <div class="bubble js_message_bubble ng-scope bubble_default left">
                                                 <div class="bubble_cont ng-scope">
-                                                    <div class="plain">
+                                                    <div id="peer_chatMessageMessagePlaceholder" class="plain">
                                                         <pre class="js_message_plain ng-binding">message</pre>
                                                     </div>
                                                 </div>
@@ -179,7 +180,9 @@
     </div>
 </body>
 <script type="text/javascript">
-var peer = new Peer({
+var chatHistory = {};
+
+/*var */peer = new Peer({
     host: window.location.hostname, port: window.location.port || null, path: '/peerjs',
     config: {'iceServers': [
         { url: 'stun:stun.l.google.com:19302' },
@@ -211,15 +214,81 @@ var peer = new Peer({
                 $(this).addClass('active');
                 $("#rid").val($(this).attr("peerid"));
             });
-            connectToFirstPeerOnOpen();
         } else {
             var copy = Array.prototype.slice.call(arguments).join(' ');
             $('#log').append(copy + '<br>');
         }
     }
 });
+
+peer.on('open', function(id){
+    updatePeerNicknameAvatar();
+});
+
+peer.on('connection', connect);
+
+peer.on('error', function(err) {
+    console.log(err);
+});
+
+function connect(c) {
+    // Handle a chat connection.
+    if (c.label === 'chat') {
+        var he = peer.connections[c.peer];
+        he.chatArea = $('#peer_chatAreaTemplate').clone();
+        he.chatArea.removeAttr('id');
+        he.chatArea.removeAttr('hidden');
+        he.chatArea.attr('peerid', c.peer);
+        $('#chatArea').append(he.chatArea);
+        c.on('data', function(data) {
+            var his = $('#peer_chatAreaTemplate #peer_chatMessageYouTemplate').clone();
+            his.removeAttr('id');
+            his.removeAttr('hidden');
+            var pre = $('<pre class="js_message_plain"></pre>');
+            pre.text(data);
+            his.find('#peer_chatMessageMessagePlaceholder').html(pre);
+            he.chatArea.find('#peer_chatMessageBox').append(his);
+        });
+        c.on('close', function() {
+            he.chatArea.remove();
+            delete he.chatArea;
+        });
+    } else if (c.label === 'file') {
+        // ignore it
+    }
+}
+
 $(document).ready(function() {
     $('#browsers').text(navigator.userAgent);
+
+    $('#peer_nickname').focusout(function() {
+        var nickname = $('#peer_nickname').text();
+        Cookies.set('nickname', nickname, { expires: 365 });
+        updatePeerNicknameAvatar();
+    });
 });
+
+// Make sure things clean up properly.
+window.onunload = window.onbeforeunload = function(e) {
+    if (!!peer && !peer.destroyed) {
+        peer.destroy();
+    }
+};
+
+//********
+// UTILS
+//********
+
+function updatePeerNicknameAvatar() {
+    var nickname = Cookies.get('nickname');
+    $('#peer_nickname').text(nickname);
+    $('#peer_nicknameAvatar').attr('src', avatarUrl(nickname));
+    peer.socket.send({type: 'USERDEFINED', payload:{type: 'NICKNAME', payload: nickname}});
+}
+
+function avatarUrl(email) {
+    return 'http://gravatar.com/avatar/' + $.md5(email) + '?default=retro';
+}
+
 </script>
 </html>
