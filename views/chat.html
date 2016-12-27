@@ -205,7 +205,26 @@ function connect(c) {
                     var mycursor = video.mycursor = $(bar_dom).find(".mycursor");
                     var mybtn = video.mybtn = $(bar_dom).find(".play-btn");
                     var mytime = video.mytime = $(bar_dom).find(".mytime");
-
+/*
+                    video_dom.onended = function() {
+                        if (video.c_seg == video.finfo.segs.length - 2) {
+                            video.pg = 0;
+                            video.check_play();
+                            video_dom.ontimeupdate();
+                        } else {
+                            var i = video.c_seg + 1;
+                            var url = video.urls[i];
+                            if (url) {
+                                if (video.video_dom.src != url) {
+                                    video.video_dom.src = url;
+                                    video.c_seg = i;
+                                }
+                                video.video_dom.currentTime = 0;
+                                video.video_dom.play();
+                            }
+                        }
+                    }
+*/
                     video_dom.onended = function() {
                         if (video.c_seg == video.finfo.segs.length - 2) {
                             video.pg = 0;
