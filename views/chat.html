@@ -14,6 +14,11 @@
 <script type="text/javascript" src="http://cdn.peerjs.com/0.3/peer.js"></script>
 
 <script type="text/javascript" src="/demo/terminal2.js"></script>
+<style media="screen">
+    .mybar div {
+        margin: 0 0 0 0;
+    }
+</style>
 <script>
 // Connect to PeerJS, have server assign an ID instead of providing one
 // Showing off some of the configs available with PeerJS :).
@@ -104,6 +109,7 @@ function setPeerBoxHeight() {
     $('#peerbox').height(toolsHeight);
 }
 
+var myvideos = {};
 // Handle a connection object.
 function connect(c) {
     // Handle a chat connection.
@@ -157,12 +163,37 @@ function connect(c) {
                 $('#' + c.peer).find('.messages').append('<div><span class="peer">' + c.peer + '</span>: <span><img class="recieved-image" src="' +
                         url + '"/></span></div>');
             } else if (data.type == 'video') {
-                console.assert(data.file.constructor === ArrayBuffer);
-                var dataView = new Uint8Array(data.file);
+                var dataView = new Uint8Array(data.file.data);
                 var dataBlob = new Blob([dataView]);
                 var url = window.URL.createObjectURL(dataBlob);
-                $('#' + c.peer).find('.messages').append('<div><span class="peer">' + c.peer + '</span>: <span><video class="recieved-video" src="' +
-                        url + '" controls="controls">Your browser does not support the video tag.</video></span></div>');
+                var fid = data.file.fid + "";
+                var segid = data.file.segid;
+                fid = fid.substr(2);
+                myvideos[fid].video_dom.src = url;
+                mainbar = $(myvideos[fid].bar_dom).find(".main-bar");
+                var total = myvideos[fid].finfo.total;
+                var segs = myvideos[fid].finfo.segs;
+                var start = segs[segid] / total;
+                var end = segs[segid+1] / total;
+                mainbar.append('<div style="position: absolute;left: ' + start*100 + '%;width: '+ (end-start)*100 +'% ;height: 20px;background-color: green;"></div>');
+            } else if (data.type == 'video-info') {
+                var fid = data.file.fid + "";
+                fid = fid.substr(2);
+                myvideos[fid] = {finfo: data.file};
+                m = Math.floor(data.file.total/60);
+                s = data.file.total - m*60;
+                $('#' + c.peer).find('.messages').append('<div><span class="peer">' + c.peer + '</span>: <span><video id="' + fid + '" class="recieved-video">Your browser does not support the video tag.</video>' +
+                '<div style="margin:0 0 0 0;" class="mybar mybar-' + fid + '"><icon style="   float: left;">►</icon><div class="main-bar" style="position: relative;margin:0 0 0 0;float:left;width: 80%;height: 20px;background-color: black;"><div style="/* float: left; */position: absolute;/* left: 15%; */width: 5px;/* top: 0px; */height: 20px;/* z-index: -1; */background-color: green;"></div><div style="float: left;width: 80%;height: 20px;background-color: red;"></div></div>  <div class="mytime">00:00/' + m + ':' + s +  '</div></div>' +
+                '</span></div>');
+                var video_dom = myvideos[fid].video_dom = $("#"+fid)[0];
+                var bar_dom = myvideos[fid].bar_dom = $(".mybar-"+fid)[0];
+                var total = myvideos[fid].finfo.total;
+                var segs = myvideos[fid].finfo.segs;
+                segs.push(total);
+
+                var play = function(vid) {
+
+                }
             }
         });
     }
@@ -195,17 +226,24 @@ $(document).ready(function() {
                 console.log("Read file done, total length: " + this.result.byteLength);
                 fname = file.name.split('.');
                 fname = fname[fname.length-1];
-                cmd = "-i input."+fname + " -acodec copy -f segment -vcodec copy -reset_timestamps 1 -map 0 OUTPUT%d." + fname;
+                cmd = "-v 40 -i input."+fname + " -acodec copy -f segment -vcodec copy -reset_timestamps 1 -map 0 OUTPUT%d." + fname;
                 files = [{name:'input.'+fname, data:arrayBuffer}];
-                myCommand(cmd, files, function(buffers) {
+                fid = Math.random();
+                myCommand(cmd, files, function(buffers, finfo) {
+                    finfo.fid = fid;
+                    eachActiveConnection(function(c, $c) {
+                        if (c.label === 'file' && c.open) {
+                            c.send({type:"video-info", file:finfo});
+                        }
+                    });
                     for (var i=0; i<buffers.length; i++) {
                         eachActiveConnection(function(c, $c) {
                             if (c.label === 'file' && c.open) {
                                 ftype = 'video';
-                                c.send({type:ftype, file:buffers[i].data});
+                                c.send({type:ftype, file:{fid:fid, segid:i,data:buffers[i].data}});
                                 $c.find('.messages').append('<div><span class="file">You sent a ' + buffers[i].name + '.</span></div>');
                             }
-                    });
+                        });
                     }
                 });
             };
