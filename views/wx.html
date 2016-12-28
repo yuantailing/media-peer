@@ -317,7 +317,7 @@ function connect(c) {
                     s = data.file.total - m*60;
                     var div = $('<div style="position: relative; border-width: 1px;    border-color: #ccc;    border-style: solid;    width: 458px;    padding: 3px;background-color: #f1f1f1;position:relative"><video style="height:375px;width:450px;" id="' + fid + '" class="recieved-video">Your browser does not support the video tag.</video>' +
 
-                    '<video id="v2-' + fid + '"style="height:375px;position: absolute; left: 3px; opacity: 0;" class="recieved-video">Your browser does not support the video tag.</video>' +
+                    '<video id="v2-' + fid + '"style="height:375px;width:450px; position: absolute; left: 3px; opacity: 0;" class="recieved-video">Your browser does not support the video tag.</video>' +
 
                     '<div style="margin:0 0 0 0;" class="mybar mybar-' + fid + '"><icon class="play-btn" style="   float: left;"><a>►</a></icon><div class="main-bar" style="position: relative;margin:0 0 0 0;float:left;width: 80%;height: 20px;background-color: black;"><div class="mycursor" style="position: absolute;width: 5px;height: 20px;background-color: red;"></div><div class="mycover" style="position: absolute;width: 100%;height: 20px;background-color: rgba(255,255,255,0);"></div></div>  <div class="mytime" style="float: left; margin-left: 5px;">00:00</div><div> /' + m + ':' + Math.floor(s) +  '</div></div>' +
                     '</div>');
@@ -353,10 +353,11 @@ function connect(c) {
 */
                     var switchTimeout = null;
                     var switchAfter = function(url, seg, t) {
-                        if (video_dom2.src != url)
+                        if (video_dom2.src != url) {
                             video_dom2.src = url;
-                        video_dom2.currentTime = 0;
-                        video_dom2.load();
+                            video_dom2.currentTime = 0;
+                            video_dom2.load();
+                        }
                         var playV2 = function() {
                             var t = video_dom;
                             video_dom = video_dom2;
