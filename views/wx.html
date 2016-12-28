@@ -185,6 +185,7 @@ var peerActive = null;
     host: window.location.hostname, port: window.location.port || null, path: '/peerjs',
     config: {'iceServers': [
         { url: 'stun:stun.l.google.com:19302' },
+        { url: 'turn:yuan@60.205.170.105:12583', credential: 'yuan' },
         { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
     ]},
     debug: 3,
