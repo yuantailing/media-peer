@@ -194,10 +194,13 @@ var peerActive = null;
             $('#log').append('PEER-LIST ' + JSON.stringify(peerList) + '<br>');
             var navBox = $('#J_NavChatScrollBody');
             navBox.empty();
+            var peerActiveAvaliable = false;
             for (var i = 0; i < peerList.length; i++) {
                 var peerid = peerList[i][0];
                 var peernick = peerList[i][1];
                 peerid2nickname[peerid] = peernick;
+                if (peerActive == peerid)
+                    peerActiveAvaliable = true;
                 if (peerid == peer.id)
                     continue;
                 var item = $('#peer_listItemTemplate').clone();
@@ -230,6 +233,8 @@ var peerActive = null;
                 });
                 navBox.append(item);
             }
+            if (!peerActiveAvaliable)
+                peerActive = null;
             updateActiveView();
             autoConnectToFirstPeerForDebug();
         } else {
