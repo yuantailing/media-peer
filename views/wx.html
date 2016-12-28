@@ -315,12 +315,12 @@ function connect(c) {
                     var video = myvideos[fid] = {finfo: data.file, urls:[], c_seg:0, pg:0.0};
                     m = Math.floor(data.file.total/60);
                     s = data.file.total - m*60;
-                    var div = $('<div><div style="border-width: 1px;    border-color: #ccc;    border-style: solid;    width: 458px;    padding: 3px;background-color: #f1f1f1;position:relative"><video style="height:375px;width:450px" id="' + fid + '" class="recieved-video">Your browser does not support the video tag.</video>' +
+                    var div = $('<div style="position: relative; border-width: 1px;    border-color: #ccc;    border-style: solid;    width: 458px;    padding: 3px;background-color: #f1f1f1;position:relative"><video style="height:375px;width:450px;" id="' + fid + '" class="recieved-video">Your browser does not support the video tag.</video>' +
 
-                    //'<video id="v2-' + fid + '"style="height:375px;position: absolute;top: 3px;opacity: 0;" class="recieved-video">Your browser does not support the video tag.</video>'
+                    '<video id="v2-' + fid + '"style="height:375px;position: absolute; left: 3px; opacity: 0;" class="recieved-video">Your browser does not support the video tag.</video>' +
 
                     '<div style="margin:0 0 0 0;" class="mybar mybar-' + fid + '"><icon class="play-btn" style="   float: left;"><a>►</a></icon><div class="main-bar" style="position: relative;margin:0 0 0 0;float:left;width: 80%;height: 20px;background-color: black;"><div class="mycursor" style="position: absolute;width: 5px;height: 20px;background-color: red;"></div><div class="mycover" style="position: absolute;width: 100%;height: 20px;background-color: rgba(255,255,255,0);"></div></div>  <div class="mytime" style="float: left; margin-left: 5px;">00:00</div><div> /' + m + ':' + Math.floor(s) +  '</div></div>' +
-                    '</div></div>');
+                    '</div>');
                     appendToChatBox(c.peer, div, false);
                     var video_dom = video.video_dom = $("#"+fid)[0];
                     var video_dom2 = video.video_dom2 = $("#v2-"+fid)[0];
@@ -351,7 +351,29 @@ function connect(c) {
                         }
                     }
 */
+                    var switchTimeout = null;
+                    var switchAfter = function(url, seg, t) {
+                        if (video_dom2.src != url)
+                            video_dom2.src = url;
+                        video_dom2.currentTime = 0;
+                        video_dom2.load();
+                        var playV2 = function() {
+                            var t = video_dom;
+                            video_dom = video_dom2;
+                            video_dom2 = t;
+                            $(video_dom).css('z-index', '62');
+                            $(video_dom2).css('z-index', '61');
+                            video.c_seg = seg;
+                            video_dom.play();
+                            video_dom2.pause();
+                        }
+                        if (switchTimeout)
+                            clearTimeout(switchTimeout);
+                        switchTimeout = setTimeout(playV2, t);
+                    }
+
                     video_dom.onended = function() {
+                        return; //!! FIXME
                         if (video.c_seg == video.finfo.segs.length - 2) {
                             video.pg = 0;
                             video.check_play();
@@ -370,13 +392,26 @@ function connect(c) {
                         }
                     }
 
-                    video_dom.ontimeupdate = function() {
+                    video_dom.ontimeupdate = video_dom2.ontimeupdate = function() {
                         var now = video_dom.currentTime + video.finfo.segs[video.c_seg];
                         video.pg = now / video.finfo.total;
                         mycursor.css("left", video.pg*100 + "%");
                         m = Math.floor(now/60);
                         s = Math.floor(now - m*60);
                         video.mytime.html(m + ':' + s);
+                        
+                        if (video.c_seg == video.finfo.segs.length - 2) {
+                            video.pg = 0;
+                            video.check_play();
+                            video_dom.ontimeupdate();
+                        } else {
+                            var i = video.c_seg + 1;
+                            var url = video.urls[i];
+                            if (url) {
+                                if (video_dom.currentTime < video_dom.duration)
+                                    switchAfter(url, i, (video_dom.duration - video_dom.currentTime) * 1000);
+                            }
+                        }
                     }
 
                     video.check_play = function() {
@@ -411,8 +446,17 @@ function connect(c) {
                         }
                     }
 
+                    var videoIsPlaying = false;
                     mybtn.on("click", function() {
-                        video.play();
+                        if (!videoIsPlaying) {
+                            video.play();
+                            video_dom.ontimeupdate();
+                        } else {
+                            video_dom.pause();
+                            if (switchTimeout)
+                                clearInterval(switchTimeout);
+                        }
+                        videoIsPlaying = !videoIsPlaying;
                     });
                     segs.push(total);
                     $(bar_dom).find(".mycover").on('click', function (e) {
