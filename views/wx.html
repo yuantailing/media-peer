@@ -72,6 +72,7 @@
                                 <div class="peer_listItemChatItem chat_item slide-left ng-scope">
                                     <div class="avatar">
                                         <img id="peer_nicknameAvatar" class="img" alt="">
+                                        <i class="peer_numberMessageUnread icon web_wechat_reddot_middle ng-binding ng-scope" style="display: none;">0</i>
                                     </div>
                                     <div class="info">
                                         <h3 class="nickname">
@@ -223,6 +224,8 @@ var peerActive = null;
                         f.on('error', function(err) { alert(err); });
                     }
                     peerActive = peerid;
+                    peer.connections[peerid].numUnread = 0;
+                    $(this).find('.peer_numberMessageUnread').hide();
                     updateActiveView();
                 });
                 navBox.append(item);
@@ -252,6 +255,7 @@ function connect(c) {
     if (c.label === 'chat') {
         var he = peer.connections[c.peer];
         he.chatArea = createChatArea(c.peer);
+        he.numUnread = 0;
         c.on('data', function(data) {
             var pre = $('<pre class="js_message_plain"></pre>');
             pre.text(data);
@@ -572,7 +576,10 @@ function createChatArea(peerid) {
 }
 
 function appendToChatBox(peerid, html, mine) {
-    var chatbox = $('.peer_chatAreaItem[peerid=' + peerid + '] .peer_chatMessageBox');
+    var he = peer.connections[peerid];
+    if (!he || !(he.chatArea))
+        return;
+    var chatbox = he.chatArea.find('.peer_chatMessageBox');
     var his = $(mine ? '#peer_chatAreaTemplate .peer_chatMessageMeTemplate' : '#peer_chatAreaTemplate .peer_chatMessageYouTemplate').clone();
     his.removeAttr('id');
     his.removeAttr('hidden');
@@ -582,10 +589,17 @@ function appendToChatBox(peerid, html, mine) {
     his.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[peerid]));
     chatbox.append(his);
     chatbox.scrollTop(chatbox.height());
-    if (!peerActive) {
+    if (!peerActive)
         peerActive = peerid;
-        updateActiveView();
+    var unreadHat = $('#J_NavChatScrollBody [peerid=' + peerid + '] .peer_numberMessageUnread');
+    if (peerActive != peerid) {
+        he.numUnread++;
+        unreadHat.text(he.numUnread > 99 ? 99 : he.numUnread).show();
+    } else {
+        he.numUnread = 0;
+        unreadHat.hide();
     }
+    updateActiveView();
 }
 
 function activeConnectionSend(label, data) {
