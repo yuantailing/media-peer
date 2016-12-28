@@ -362,8 +362,11 @@ function connect(c) {
                             var t = video_dom;
                             video_dom = video_dom2;
                             video_dom2 = t;
-                            $(video_dom).css('z-index', '62');
-                            $(video_dom2).css('z-index', '61');
+                            if ($(video_dom).attr('id').startsWith('v2')) {
+                                $(video_dom).css('opacity', '1');
+                            } else {
+                                $(video_dom2).css('opacity', '0');
+                            }
                             video.c_seg = seg;
                             video_dom.play();
                             video_dom2.pause();
@@ -454,8 +457,9 @@ function connect(c) {
                             video_dom.ontimeupdate();
                         } else {
                             video_dom.pause();
+                            video_dom2.pause();
                             if (switchTimeout)
-                                clearInterval(switchTimeout);
+                                clearTimeout(switchTimeout);
                         }
                         videoIsPlaying = !videoIsPlaying;
                     });
