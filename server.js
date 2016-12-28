@@ -5,7 +5,7 @@ var app = express();
 app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
 
-app.get('/', function(req, res, next) { res.render('chat.html'); });
+app.get('/', function(req, res, next) { res.render('wx.html'); });
 app.get('/chat/', function(req, res, next) { res.render('chat.html'); });
 app.get('/wx/', function(req, res, next) { res.render('wx.html'); });
 

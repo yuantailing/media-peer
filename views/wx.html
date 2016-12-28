@@ -489,6 +489,8 @@ $(document).ready(function() {
                     files = [{name:'input.'+fname, data:arrayBuffer}];
                     fid = Math.random();
                     myCommand(cmd, files, function(buffers, finfo) {
+                        if (!buffers.length)
+                            return;
                         finfo.fid = fid;
                         var mysvideo = $('<video style="height:375px;width:450px" controls="controls"></video>');
                         var url = window.URL.createObjectURL(file);
