@@ -236,7 +236,7 @@ var peerActive = null;
             if (!peerActiveAvaliable)
                 peerActive = null;
             updateActiveView();
-            autoConnectToFirstPeerForDebug();
+            // autoConnectToFirstPeerForDebug();
         } else {
             var copy = Array.prototype.slice.call(arguments).join(' ');
             $('#log').append(copy + '<br>');
@@ -331,27 +331,17 @@ function connect(c) {
                     var mycursor = video.mycursor = $(bar_dom).find(".mycursor");
                     var mybtn = video.mybtn = $(bar_dom).find(".play-btn");
                     var mytime = video.mytime = $(bar_dom).find(".mytime");
-/*
-                    video_dom.onended = function() {
-                        if (video.c_seg == video.finfo.segs.length - 2) {
-                            video.pg = 0;
-                            video.check_play();
-                            video_dom.ontimeupdate();
+
+                    var videoIsPlaying = false;
+                    var switchTimeout = null;
+
+                    var showVideoDom = function(flag) {
+                        if ($(video_dom).attr('id').startsWith('v2')) {
+                            $(video_dom).css('opacity', flag ? '1' : '0');
                         } else {
-                            var i = video.c_seg + 1;
-                            var url = video.urls[i];
-                            if (url) {
-                                if (video.video_dom.src != url) {
-                                    video.video_dom.src = url;
-                                    video.c_seg = i;
-                                }
-                                video.video_dom.currentTime = 0;
-                                video.video_dom.play();
-                            }
+                            $(video_dom2).css('opacity', flag ? '0' : '1');
                         }
                     }
-*/
-                    var switchTimeout = null;
                     var switchAfter = function(url, seg, t) {
                         if (video_dom2.src != url) {
                             video_dom2.src = url;
@@ -362,11 +352,7 @@ function connect(c) {
                             var t = video_dom;
                             video_dom = video_dom2;
                             video_dom2 = t;
-                            if ($(video_dom).attr('id').startsWith('v2')) {
-                                $(video_dom).css('opacity', '1');
-                            } else {
-                                $(video_dom2).css('opacity', '0');
-                            }
+                            showVideoDom(true);
                             video.c_seg = seg;
                             video_dom.play();
                             video_dom2.pause();
@@ -378,43 +364,23 @@ function connect(c) {
 
                     video_dom.onended = function() {
                         return; //!! FIXME
-                        if (video.c_seg == video.finfo.segs.length - 2) {
-                            video.pg = 0;
-                            video.check_play();
-                            video_dom.ontimeupdate();
-                        } else {
-                            var i = video.c_seg + 1;
-                            var url = video.urls[i];
-                            if (url) {
-                                if (video.video_dom.src != url) {
-                                    video.video_dom.src = url;
-                                    video.c_seg = i;
-                                }
-                                video.video_dom.currentTime = 0;
-                                video.video_dom.play();
-                            }
-                        }
                     }
 
                     video_dom.ontimeupdate = video_dom2.ontimeupdate = function() {
+                        if (!videoIsPlaying)
+                            return;
                         var now = video_dom.currentTime + video.finfo.segs[video.c_seg];
                         video.pg = now / video.finfo.total;
                         mycursor.css("left", video.pg*100 + "%");
                         m = Math.floor(now/60);
                         s = Math.floor(now - m*60);
                         video.mytime.html(m + ':' + s);
-                        
-                        if (video.c_seg == video.finfo.segs.length - 2) {
-                            video.pg = 0;
-                            video.check_play();
-                            video_dom.ontimeupdate();
-                        } else {
-                            var i = video.c_seg + 1;
-                            var url = video.urls[i];
-                            if (url) {
-                                if (video_dom.currentTime < video_dom.duration)
-                                    switchAfter(url, i, (video_dom.duration - video_dom.currentTime) * 1000);
-                            }
+
+                        var i = video.c_seg + 1;
+                        var url = video.urls[i];
+                        if (url) {
+                            if (video_dom.currentTime < video_dom.duration)
+                                switchAfter(url, i, (video_dom.duration - video_dom.currentTime) * 1000);
                         }
                     }
 
@@ -426,11 +392,16 @@ function connect(c) {
                         if (i<0) i=0;
                         var url = video.urls[i];
                         if (url) {
-                            if (video.video_dom.src != url) {
-                                video.video_dom.src = url;
+                            if (video_dom.src != url) {
+                                video_dom.src = url;
                                 video.c_seg = i;
                             }
-                            video.video_dom.currentTime = pts - video.finfo.segs[i];
+                            video_dom.currentTime = pts - video.finfo.segs[i];
+                            showVideoDom(true);
+                            if (videoIsPlaying)
+                                video_dom.play();
+                            else
+                                video_dom.pause();
                         }
                     };
 
@@ -450,7 +421,6 @@ function connect(c) {
                         }
                     }
 
-                    var videoIsPlaying = false;
                     mybtn.on("click", function() {
                         if (!videoIsPlaying) {
                             video.play();
