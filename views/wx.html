@@ -31,7 +31,7 @@
 }
 
 .video-streamed {
-  width: 400px;
+  width: 450px;
 }
     </style>
 </head>
@@ -181,9 +181,10 @@
     </div>
 </body>
 <script type="text/javascript">
-var peerList = [];
-var peerid2nickname = {};
-var peerActive = null;
+/*var */peerList = [];
+/*var */peerid2nickname = {};
+/*var */peerActive = null;
+/*var */callProgress = {};
 
 /*var */peer = new Peer({
     host: window.location.hostname, port: window.location.port || null, path: '/peerjs',
@@ -241,7 +242,7 @@ var peerActive = null;
             if (!peerActiveAvaliable)
                 peerActive = null;
             updateActiveView();
-            // autoConnectToFirstPeerForDebug();
+            autoConnectToFirstPeerForDebug();
         } else {
             var copy = Array.prototype.slice.call(arguments).join(' ');
             $('#log').append(copy + '<br>');
@@ -259,11 +260,42 @@ peer.on('connection', connect);
 peer.on('call', function(c) {
     c.answer(null);
     c.on('stream', function(stream) {
+        var callid = c.id;
+        var videoDiv = $('<div></div>');
+        videoDiv.css('line-height', '0');
         var videoLabel = $('<video></video>');
         videoLabel.addClass('video-streamed');
-        videoLabel.attr('autoplay', '');
+        videoLabel.attr('autoplay', 'autoplay');
         videoLabel.prop('srcObject', stream);
-        appendToChatBox(c.peer, videoLabel, false);
+        videoLabel.attr('controls', 'controls');
+        videoLabel.attr('callid', callid);
+        var progressLabel = $('<div class="main-progress-bar" style="position: relative; float: left; width: 100%; height: 15px; background-color: gray;">' +
+            '<div class="progress-bar-mycursor" style="position: absolute; width: 5px; height: 100%; background-color: red; left: 39.6168%;"></div>' +
+            '<div class="progress-bar-mycover" style="position: absolute; width: 100%; height: 100%; background-color: rgba(255,255,255,0);"></div>' +
+            '</div>');
+        progressLabel.find('.progress-bar-mycover').on('click', function(e) {
+            specifyConnectionSend(c.peer, 'file', {type: 'call-sync', callid: callid, paused: videoLabel[0].paused, percents: (e.offsetX / $(this).innerWidth())});
+        });
+        videoLabel.on('pause', function() {
+            specifyConnectionSend(c.peer, 'file', {type: 'call-set-pause', callid: callid, paused: true});
+        });
+        videoLabel.on('play', function() {
+            specifyConnectionSend(c.peer, 'file', {type: 'call-set-pause', callid: callid, paused: false});
+        });
+        videoLabel.on('timeupdate', function(e) {
+            var obj = callProgress[callid];
+            if (!obj.paused)
+                obj.updateTime = (new Date()).getTime();
+            var percents = ((obj.updateTime - obj.localTime) / 1000 + obj.remoteTime) / obj.duration;
+            percents = Math.max(0, Math.min(1, percents));
+            progressLabel.find('.progress-bar-mycursor').css('left', percents * 100 + '%');
+        });
+        var clearLabel = $('<div></div>');
+        clearLabel.css('clear', 'both');
+        videoDiv.append(videoLabel);
+        videoDiv.append(progressLabel);
+        videoDiv.append(clearLabel);
+        appendToChatBox(c.peer, videoDiv, false);
     });
 });
 
@@ -278,6 +310,7 @@ function connect(c) {
         he.chatArea = createChatArea(c.peer);
         he.numUnread = 0;
         c.on('data', function(data) {
+            console.assert(data.constructor === String);
             var pre = $('<pre class="js_message_plain"></pre>');
             pre.text(data);
             appendToChatBox(c.peer, pre, false);
@@ -451,7 +484,6 @@ function connect(c) {
                     });
                     segs.push(total);
                     $(bar_dom).find(".mycover").on('click', function (e) {
-                        console.log(e);
                         var pg = e.offsetX / mycover.width();
 
                         mycursor.css("left", pg*100 + "%");
@@ -460,6 +492,31 @@ function connect(c) {
                     });
                 };
                 noname();
+            } else if (data.type == 'call-sync') { // slave to master
+                var localVideo = $('video[callid=' + data.callid + ']');
+                localVideo[0].currentTime = data.percents * localVideo[0].duration;
+                localVideo[0].play();
+            } else if (data.type == 'call-set-pause') { // slave to master
+                var localVideo = $('video[callid=' + data.callid + ']');
+                if (!localVideo[0].paused && data.paused)
+                    localVideo[0].pause();
+                if (localVideo[0].paused && !data.paused)
+                    localVideo[0].play();
+            } else if (data.type == 'call-seeked') { // master to slave
+                if (callProgress[data.callid] === undefined)
+                    callProgress[data.callid] = {}
+                callProgress[data.callid].localTime = (new Date()).getTime();
+                callProgress[data.callid].remoteTime = data.currentTime;
+                callProgress[data.callid].duration = data.duration;
+            } else if (data.type == 'call-paused') { // master to slave
+                if (callProgress[data.callid] === undefined)
+                    callProgress[data.callid] = {}
+                callProgress[data.callid].paused = data.paused;
+                if (data.paused == false) {
+                    var videoLabel = $('video[callid=' + data.callid + ']');
+                    if (videoLabel.length > 0)
+                        videoLabel[0].play();
+                }
             } else {
                 console.assert(data.type == 'file');
                 // If we're getting a file, create a URL for it.
@@ -512,17 +569,22 @@ $(document).ready(function() {
             var file = $(this).prop('files')[0];
             localVideo = $('<video></video>');
             localVideo.addClass('video-streamed');
-            localVideo.attr('autoplay', '');
+            localVideo.attr('autoplay', 'autoplay');
             localVideo.attr('src', window.URL.createObjectURL(file));
             localVideo.attr('controls', 'controls');
             appendToChatBox(toPeerId, localVideo, true);
             var localStream = null;
+            var reReportProgress = function() {
+                specifyConnectionSend(toPeerId, 'file', {type: 'call-seeked', callid: localVideo.attr('callid'), currentTime: localVideo[0].currentTime, duration: localVideo[0].duration});
+            };
             var maybeCreateStream = function() {
                 if (localStream !== null)
                     return;
                 if (localVideo[0].captureStream) {
                     localStream = localVideo[0].captureStream();
-                    peer.call(toPeerId, localStream);
+                    var callid = peer.call(toPeerId, localStream).id;
+                    localVideo.attr('callid', callid);
+                    reReportProgress();
                 } else {
                     alert('Please enable chrome://flags #enable-experimental-web-platform-features. (Chrome >= 53.0)');
                 }
@@ -533,6 +595,14 @@ $(document).ready(function() {
             if (localVideo[0].readyState >= 3) {
                 maybeCreateStream();
             }
+            localVideo.on('seeked', reReportProgress);
+            localVideo.on('pause', function() {
+                specifyConnectionSend(toPeerId, 'file', {type: 'call-paused', callid: localVideo.attr('callid'), paused: true});
+            });
+            localVideo.on('play', function() {
+                specifyConnectionSend(toPeerId, 'file', {type: 'call-paused', callid: localVideo.attr('callid'), paused: false});
+                reReportProgress();
+            });
             localVideo[0].play();
         });
     });
@@ -555,7 +625,6 @@ $(document).ready(function() {
                 appendToChatBox(peerActive, vdiv, true);
                 fileReader.onload = function() {
                     arrayBuffer = new Uint8Array(this.result);
-                    console.log("Read file done, total length: " + this.result.byteLength);
                     fname = file.name.split('.');
                     fname = fname[fname.length-1];
                     cmd = "-v 40 -i input."+fname + " -acodec copy -f segment -vcodec copy -reset_timestamps 1 -map 0 OUTPUT%d." + fname;
@@ -680,13 +749,17 @@ function appendToChatBox(peerid, html, mine) {
     updateActiveView();
 }
 
-function activeConnectionSend(label, data) {
-    if (peerActive && peer.connections[peerActive]) {
-        $.each(peer.connections[peerActive], function(idx, c) {
+function specifyConnectionSend(peerid, label, data) {
+    if (peerid && peer.connections[peerid]) {
+        $.each(peer.connections[peerid], function(idx, c) {
             if (c.label == label && c.open)
                 c.send(data)
         });
     }
+}
+
+function activeConnectionSend(label, data) {
+    specifyConnectionSend(peerActive, label, data);
 }
 
 function autoConnectToFirstPeerForDebug() {
