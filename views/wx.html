@@ -514,7 +514,7 @@ $(document).ready(function() {
             localVideo.addClass('video-streamed');
             localVideo.attr('autoplay', '');
             localVideo.attr('src', window.URL.createObjectURL(file));
-            localVideo.hide();
+            localVideo.attr('controls', 'controls');
             appendToChatBox(toPeerId, localVideo, true);
             var localStream = null;
             var maybeCreateStream = function() {
@@ -626,11 +626,14 @@ function avatarUrl(email) {
 function updateActiveView() {
     $('.peer_listItemChatItem').removeClass('active');
     $('.peer_chatAreaItem').hide();
+    $.map($('.peer_chatAreaItem video'), function(v) { v.volume = 0; });
     if (peerActive) {
         $('#J_NavChatScrollBody div[peerid=' + peerActive + '] .peer_listItemChatItem').addClass('active');
         $('#peer_titleName').text(peerid2nickname[peerActive] || peerActive);
         $('#peer_downIcon').show();
-        $('.peer_chatAreaItem[peerid=' + peerActive + ']').show();
+        var area = $('.peer_chatAreaItem[peerid=' + peerActive + ']');
+        area.show();
+        $.map(area.find('video'), function(v) { v.volume = 0.8; });
         $('#peer_noChatHint').hide();
         $('#peer_inputComponent').show();
     } else {
