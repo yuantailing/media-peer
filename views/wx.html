@@ -564,7 +564,11 @@ function sendVideoUsingFfmpeg(toPeerId, file) {
 }
 
 function sendVideoUsingStream(toPeerId, file) {
-    localVideo = $('<video></video>');
+    var localVideo = $('<video></video>');
+    if (!localVideo[0].captureStream) {
+        alert('Please enable chrome://flags/#enable-experimental-web-platform-features. (Chrome >= 53.0)');
+        return;
+    }
     localVideo.addClass('video-streamed');
     localVideo.attr('autoplay', 'autoplay');
     localVideo.attr('src', window.URL.createObjectURL(file));
@@ -577,14 +581,10 @@ function sendVideoUsingStream(toPeerId, file) {
     var maybeCreateStream = function() {
         if (localStream !== null)
             return;
-        if (localVideo[0].captureStream) {
-            localStream = localVideo[0].captureStream();
-            var callid = peer.call(toPeerId, localStream).id;
-            localVideo.attr('callid', callid);
-            reReportProgress();
-        } else {
-            alert('Please enable chrome://flags #enable-experimental-web-platform-features. (Chrome >= 53.0)');
-        }
+        localStream = localVideo[0].captureStream();
+        var callid = peer.call(toPeerId, localStream).id;
+        localVideo.attr('callid', callid);
+        reReportProgress();
     };
     localVideo.on('canplay', function() {
         maybeCreateStream();
