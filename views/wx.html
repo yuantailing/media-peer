@@ -219,7 +219,7 @@
                 item.find('#peer_nicknameAvatar').attr('src', avatarUrl(peernick));
                 item.click(function() {
                     var peerid = $(this).attr('peerid');
-                    if (!peer.connections[peerid]) {
+                    if (!peer.connections[peerid] || (peer.connections[peerid].length == 1 && peer.connections[peerid][0].label == 'ping')) {
                         var c = peer.connect(peerid, {
                             label: 'chat',
                             serialization: 'none',
