@@ -324,7 +324,7 @@ setInterval(function() {
                     }
                     if (peer.connections[peerid].pingLock)
                         return;
-                    c.send({type: 'ping', from: peer.id, current: current});
+                    specifyConnectionSend(c.peer, 'ping', {type: 'ping', from: peer.id, current: current});
                     peer.connections[peerid].pingLock = true;
                     peer.connections[peerid].lastPing = current;
                 }
@@ -570,7 +570,7 @@ function connect(c) {
         console.assert(c.label == 'ping');
         c.on('data', function(data) {
             if (data.from != peer.id) {
-                c.send(data);
+                specifyConnectionSend(c.peer, 'ping', data);
             } else {
                 peer.connections[c.peer].pingLock = false;
                 var result = (new Date()).getTime() - data.current + ' ms';
