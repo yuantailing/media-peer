@@ -82,6 +82,9 @@
                                         <h3 class="nickname">
                                             <span id="peer_nicknameText" class="nickname_text ng-binding">Tsinghua</span>
                                         </h3>
+                                        <p class="msg ng-scope">
+                                            <span></span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -302,6 +305,40 @@ peer.on('call', function(c) {
 peer.on('error', function(err) {
     console.log(err);
 });
+
+setInterval(function() {
+    $.map(peerList, function(peerTuple) {
+        var current = (new Date()).getTime();
+        var peerid = peerTuple[0];
+        if (peer.id == peerid)
+            return;
+        var hasPingChannel = false;
+        if (peerid && peer.connections[peerid]) {
+            $.each(peer.connections[peerid], function(idx, c) {
+                if (c.label == 'ping' && c.open) {
+                    hasPingChannel = true;
+                    if (peer.connections[peerid].lastPing && current - peer.connections[peerid].lastPing < 1800)
+                        return;
+                    if (peer.connections[peerid].lastPing && current - peer.connections[peerid].lastPing > 6200) {
+                        setPingResult(peerid, 'Timeout');
+                    }
+                    if (peer.connections[peerid].pingLock)
+                        return;
+                    c.send({type: 'ping', from: peer.id, current: current});
+                    peer.connections[peerid].pingLock = true;
+                    peer.connections[peerid].lastPing = current;
+                }
+            });
+        }
+        if (!hasPingChannel && peer.id < peerid) {
+            var p = peer.connect(peerid, { label: 'ping', reliable: true });
+            p.on('open', function() {
+                connect(this);
+            });
+            p.on('error', function(err) { alert(err); });
+        }
+    });
+}, 500);
 
 function connect(c) {
     // Handle a chat connection.
@@ -529,6 +566,17 @@ function connect(c) {
                 appendToChatBox(c.peer, div, false);
             }
         });
+    } else {
+        console.assert(c.label == 'ping');
+        c.on('data', function(data) {
+            if (data.from != peer.id) {
+                c.send(data);
+            } else {
+                peer.connections[c.peer].pingLock = false;
+                var result = (new Date()).getTime() - data.current + ' ms';
+                setPingResult(c.peer, result);
+            }
+        });
     }
 }
 
@@ -715,10 +763,21 @@ function avatarUrl(email) {
     return 'http://gravatar.com/avatar/' + $.md5(email || '') + '?default=retro';
 }
 
+function setPingResult(peerid, result) {
+    peer.connections[peerid].pingResult = result;
+    $('#J_NavChatScrollBody').find('div[peerid=' + peerid + '] .msg span').text(result);
+}
+
 function updateActiveView() {
     $('.peer_listItemChatItem').removeClass('active');
     $('.peer_chatAreaItem').hide();
     $.map($('.peer_chatAreaItem video'), function(v) { v.volume = 0; });
+    $.map($('#J_NavChatScrollBody').find('div[peerid]'), function(div) {
+        var peerid = $(div).attr('peerid');
+        if (peerid && peer.connections[peerid]) {
+            $(div).find('.msg span').text(peer.connections[peerid].pingResult || "");
+        }
+    });
     if (peerActive) {
         $('#J_NavChatScrollBody div[peerid=' + peerActive + '] .peer_listItemChatItem').addClass('active');
         $('#peer_titleName').text(peerid2nickname[peerActive] || peerActive);
