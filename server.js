@@ -7,6 +7,7 @@ app.engine('html', require('ejs').renderFile);
 
 app.get('/', function(req, res, next) { res.render('wx.html'); });
 app.get('/wx/', function(req, res, next) { res.render('wx.html'); });
+app.get('/ffmpeg/', function(req, res, next) { res.render('wx.html'); });
 
 app.use(express.static('static'));
 

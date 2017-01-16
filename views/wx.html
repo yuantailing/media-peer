@@ -13,7 +13,6 @@
     <script type="text/javascript" src="/js/peer.js"></script>
     <script type="text/javascript" src="/js/js.cookie.js"></script>
     <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-    <!--script type="text/javascript" src="/demo/terminal2.js"></script-->
     <style type="text/css">
 .warning {
   font-size: 12px;
@@ -651,6 +650,8 @@ function sendVideoUsingStream(toPeerId, file) {
     localVideo[0].play();
 }
 
+var sendVideoAutoSelect = sendVideoUsingStream;
+
 $(document).ready(function() {
     $('#browsers').text(navigator.userAgent);
 
@@ -687,7 +688,7 @@ $(document).ready(function() {
         fileInputLabel.change(function() {
             var file = $(this).prop('files')[0];
             if (file.type.startsWith('video')) {
-                sendVideoUsingStream(toPeerId, file);
+                sendVideoAutoSelect(toPeerId, file);
             } else if (file.type.startsWith('image')) {
                 activeConnectionSend('file', {type: 'image', file: file});
                 var url = window.URL.createObjectURL(file);
@@ -716,8 +717,8 @@ $(document).ready(function() {
         if (peerActive && peer.connections[peerActive]) {
             var file = e.originalEvent.dataTransfer.files[0];
             if (file.type.startsWith('video')) {
-                sendVideoUsingStream(peerActive, file);
-                // You can try another method: sendVideoUsingFfmpeg(peerActive, file);
+                sendVideoAutoSelect(peerActive, file);
+                // You can use 2 methods: sendVideoUsingFfmpeg(peerActive, file), sendVideoUsingStream(peerActive, file);
             } else if (file.type.startsWith('image')) {
                 activeConnectionSend('file', {type: 'image', file: file});
                 var url = window.URL.createObjectURL(file);
@@ -733,6 +734,14 @@ $(document).ready(function() {
             }
         }
     });
+
+    if (window.location.pathname.toLowerCase().search('/ffmpeg') >= 0) {
+        var sc = $('<sc' + 'ript></sc' + 'ript>');
+        sc.attr('type', 'text/javascript');
+        sc.attr('src', '/demo/terminal2.js');
+        $('head').append(sc);
+        sendVideoAutoSelect = sendVideoUsingFfmpeg;
+    }
 });
 
 // Make sure things clean up properly.
