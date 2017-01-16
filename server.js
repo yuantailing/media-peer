@@ -50,7 +50,8 @@ function sendPeerListToClients() {
     var peers = peerServer._clients.peerjs;
     var ids = Array();
     for (peer in peers)
-        ids.push([peer, nickTable[peer]]);
+        if (peers[peer].socket && (peers[peer].socket.readyState == peers[peer].socket.OPEN))
+            ids.push([peer, nickTable[peer]]);
     for (peer in peers)
         if (peers[peer].socket && (peers[peer].socket.readyState == peers[peer].socket.OPEN))
             peers[peer].socket.send(JSON.stringify({type: 'PEER-LIST', payload: {peers: ids}}));
