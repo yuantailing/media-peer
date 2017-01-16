@@ -775,7 +775,12 @@ function updateActiveView() {
     $.map($('#J_NavChatScrollBody').find('div[peerid]'), function(div) {
         var peerid = $(div).attr('peerid');
         if (peerid && peer.connections[peerid]) {
+            var he = peer.connections[peerid];
             $(div).find('.msg span').text(peer.connections[peerid].pingResult || "");
+            if (he.numUnread > 0)
+                $(div).find('.peer_numberMessageUnread').text(he.numUnread > 99 ? '99' : '' + he.numUnread).show();
+            else
+                $(div).find('.peer_numberMessageUnread').hide();
         }
     });
     if (peerActive) {
@@ -821,13 +826,10 @@ function appendToChatBox(peerid, html, mine) {
     if (!peerActive)
         peerActive = peerid;
     var unreadHat = $('#J_NavChatScrollBody [peerid=' + peerid + '] .peer_numberMessageUnread');
-    if (peerActive != peerid) {
+    if (peerActive != peerid)
         he.numUnread++;
-        unreadHat.text(he.numUnread > 99 ? 99 : he.numUnread).show();
-    } else {
+    else
         he.numUnread = 0;
-        unreadHat.hide();
-    }
     updateActiveView();
 }
 
