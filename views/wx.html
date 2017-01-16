@@ -820,7 +820,7 @@ function appendToChatBox(peerid, html, mine) {
     var placeholder = his.find('#peer_chatMessageMessagePlaceholder');
     placeholder.empty();
     placeholder.html(html);
-    his.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[peerid]));
+    his.find('#peer_chatMessageAvatar').attr('src', avatarUrl(peerid2nickname[mine ? peer.id : peerid]));
     chatbox.append(his);
     chatbox.scrollTop(chatbox.height());
     if (!peerActive)
