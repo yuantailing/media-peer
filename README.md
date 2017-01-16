@@ -1,7 +1,10 @@
-# media-peer
+Media Peer
+==========
+
 用peerjs实现客户端之间互传文本、图片、视频
 
-# Usage
+Usage
+-----
 
 安装依赖
 
@@ -20,3 +23,11 @@ $ npm run dev
 ```
 $ npm start
 ```
+
+访问
+
+```
+http://${SERVER_NAME}:9000/
+```
+
+穿越NAT需要在同一台服务器运行[TURN server](http://turnserver.sourceforge.net/)，UDP端口`12583`、用户名`yuan`、密码`yuan`
