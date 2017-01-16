@@ -13,6 +13,7 @@
     <script type="text/javascript" src="/js/peer.js"></script>
     <script type="text/javascript" src="/js/js.cookie.js"></script>
     <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/demo/terminal2.js"></script>
     <style type="text/css">
 .warning {
   font-size: 12px;
@@ -736,10 +737,7 @@ $(document).ready(function() {
     });
 
     if (window.location.pathname.toLowerCase().search('/ffmpeg') >= 0) {
-        var sc = $('<sc' + 'ript></sc' + 'ript>');
-        sc.attr('type', 'text/javascript');
-        sc.attr('src', '/demo/terminal2.js');
-        $('head').append(sc);
+        initWorker();
         sendVideoAutoSelect = sendVideoUsingFfmpeg;
     }
 });

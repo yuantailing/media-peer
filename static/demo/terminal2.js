@@ -175,7 +175,3 @@ function initWorker() {
     }
   };
 }
-
-$(document).ready(function() {
-    initWorker();
-})
